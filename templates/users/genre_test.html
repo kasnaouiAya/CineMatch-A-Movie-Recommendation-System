@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% block content %}
+<div style="min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:60px 40px; background:radial-gradient(ellipse at 50% 100%,rgba(153,27,27,.15) 0%,transparent 60%);">
+  <div style="font-size:48px; color:#7c3aed; margin-bottom:20px;">🎬</div>
+  <h1 style="font-size:32px; font-weight:800; margin-bottom:10px; text-align:center;">What do you like to watch?</h1>
+  <p style="font-size:15px; color:#9ca3af; margin-bottom:32px; text-align:center;">Select your favorite genres to get personalized recommendations</p>
+
+  <div style="background:#231d35; border:1px solid #3d3554; border-radius:14px; padding:28px; width:100%; max-width:700px;">
+    <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
+      <h3 style="font-size:17px; font-weight:700;">Choose Your Genres</h3>
+      <span id="count-label" style="font-size:14px; color:#9ca3af;">0 selected</span>
+    </div>
+    <p style="font-size:13px; color:#9ca3af; margin-bottom:20px;">Select at least 3 genres to help us understand your taste</p>
+
+    <form method="POST">
+      {% csrf_token %}
+      <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:24px;">
+        {% for genre in genres %}
+          <label style="padding:18px 10px; border-radius:10px; border:1.5px solid #3d3554; background:#2d2640; cursor:pointer; text-align:center; font-size:15px; font-weight:600; color:#fff; transition:all .15s; display:flex; align-items:center; justify-content:center; gap:6px;">
+            <input type="checkbox" name="genres" value="{{ genre }}" style="display:none;" onchange="updateCount()">
+            {{ genre }}
+          </label>
+        {% endfor %}
+      </div>
+      <button type="submit" class="btn-red" id="continue-btn" disabled style="opacity:.4; cursor:not-allowed;">Continue →</button>
+    </form>
+  </div>
+</div>
+
+<script>
+function updateCount() {
+  const checked = document.querySelectorAll('input[name="genres"]:checked').length;
+  document.getElementById('count-label').textContent = checked + ' selected';
+  const btn = document.getElementById('continue-btn');
+  if (checked >= 3) {
+    btn.disabled = false;
+    btn.style.opacity = '1';
+    btn.style.cursor = 'pointer';
+  } else {
+    btn.disabled = true;
+    btn.style.opacity = '.4';
+    btn.style.cursor = 'not-allowed';
+  }
+
+  // Style selected labels
+  document.querySelectorAll('input[name="genres"]').forEach(inp => {
+    const label = inp.parentElement;
+    if (inp.checked) {
+      label.style.background = '#6d28d9';
+      label.style.borderColor = '#7c3aed';
+    } else {
+      label.style.background = '#2d2640';
+      label.style.borderColor = '#3d3554';
+    }
+  });
+}
+</script>
+{% endblock %}

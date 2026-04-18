@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CineMatch</title>
+
+  <script>
+    // Apply saved theme immediately to avoid flash
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+  </script>
+<style>
+    [data-theme="dark"] {
+      --bg: #1a1625;
+      --bg2: #231d35;
+      --bg3: #2d2640;
+      --text: #ffffff;
+      --text2: #9ca3af;
+      --text3: #6b7280;
+      --border: #3d3554;
+      --card: #231d35;
+      --input-bg: #2d2640;
+      --red: #7c3aed;
+      --red2: #6d28d9;
+      --gold: #f59e0b;
+    }
+    [data-theme="light"] {
+      --bg: #f5f0f0;
+      --bg2: #ffffff;
+      --bg3: #f0e8e8;
+      --text: #1a0000;
+      --text2: #6b7280;
+      --text3: #9ca3af;
+      --border: #e5d0d0;
+      --card: #ffffff;
+      --input-bg: #f5f0f0;
+      --red: #7c3aed;
+      --red2: #6d28d9;
+      --gold: #c8890a;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: #1a1625; color: #fff; display: flex; min-height: 100vh; }
+
+    .sidebar { width: 260px; background: #231d35; border-right: 1px solid #3d3554; display: flex; flex-direction: column; min-height: 100vh; padding: 0; flex-shrink: 0; }
+    .sb-logo { display: flex; align-items: center; gap: 10px; padding: 20px; border-bottom: 1px solid #3d3554; }
+    .sb-logo span { font-size: 20px; font-weight: 700; color: #7c3aed; }
+    .sb-role { margin: 14px 16px; padding: 8px; border-radius: 6px; text-align: center; font-size: 12px; font-weight: 700; letter-spacing: .1em; }
+    .sb-role.guest { border: 1px solid #3d3554; color: #9ca3af; }
+    .sb-role.user { background: #6d28d9; color: white; }
+    .sb-role.admin { background: #7f1d1d; color: white; }
+    .sb-nav { padding: 8px; flex: 1; }
+    .sb-item { display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-radius: 8px; color: #9ca3af; font-size: 14px; font-weight: 500; text-decoration: none; margin-bottom: 2px; transition: all .15s; }
+    .sb-item:hover { background: #2d2640; color: #fff; }
+    .sb-item.active { background: #6d28d9; color: white; }
+    .sb-divider { height: 1px; background: #3d3554; margin: 10px 8px; }
+    .sb-label { padding: 8px 14px 4px; font-size: 10px; font-weight: 600; letter-spacing: .1em; color: #6b7280; text-transform: uppercase; }
+    .sb-bottom { padding: 12px 8px; border-top: 1px solid #3d3554; }
+    .sb-foot { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 8px; color: #9ca3af; font-size: 14px; text-decoration: none; transition: all .15s; cursor: pointer; background: none; border: none; width: 100%; font-family: inherit; }
+    .sb-foot:hover { background: #2d2640; color: #fff; }
+
+    .main { flex: 1; min-width: 0; }
+
+    .form-input { width: 100%; padding: 11px 14px; background: #2d2640; border: 1px solid #3d3554; border-radius: 8px; color: #fff; font-size: 14px; outline: none; font-family: inherit; transition: border-color .2s; }
+    .form-input:focus { border-color: #7c3aed; }
+    .btn-red { width: 100%; padding: 13px; border-radius: 8px; background: #7c3aed; border: none; color: white; font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit; transition: background .15s; }
+    .btn-red:hover { background: #6d28d9; }
+    .messages { list-style: none; padding: 0 0 12px; }
+    .messages li { padding: 10px 14px; border-radius: 8px; margin-bottom: 8px; font-size: 13px; background: rgba(248,113,113,.1); border: 1px solid rgba(248,113,113,.2); color: #f87171; }
+  </style>
+
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="sb-logo">
+    <span>🎬 CineMatch</span>
+  </div>
+
+  {% if user.is_authenticated %}
+    {% if user.is_superuser %}
+      <div class="sb-role admin">ADMIN</div>
+    {% else %}
+      <div class="sb-role user">USER</div>
+    {% endif %}
+  {% else %}
+    <div class="sb-role guest">GUEST</div>
+  {% endif %}
+
+  <nav class="sb-nav">
+    {% if user.is_authenticated and user.is_superuser %}
+      <a href="{% url 'home' %}" class="sb-item {% if request.resolver_match.url_name == 'home' %}active{% endif %}">📊 Dashboard</a>
+    {% else %}
+      <a href="{% url 'home' %}" class="sb-item {% if request.resolver_match.url_name == 'home' %}active{% endif %}">🏠 Home</a>
+    {% endif %}
+
+    {% if user.is_authenticated %}
+      <a href="{% url 'profile' %}" class="sb-item {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">👤 Profile</a>
+    {% endif %}
+  </nav>
+
+  <div class="sb-bottom">
+    {% if user.is_authenticated %}
+      <form method="POST" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="sb-foot">🚪 Sign Out</button>
+      </form>
+    {% else %}
+      <a href="{% url 'login' %}" class="sb-foot">🔑 Sign In</a>
+      <a href="{% url 'register' %}" class="sb-foot">✨ Create Account</a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="main">
+  {% if messages %}
+    <ul class="messages" style="padding: 16px 24px 0;">
+      {% for message in messages %}
+        <li>{{ message }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+  {% block content %}{% endblock %}
+</div>
+<!-- Dark/Light toggle button -->
+<button onclick="toggleTheme()" style="
+  position: fixed;
+  bottom: 24px;
+  left: 280px;
+  z-index: 999;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border-radius: 99px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all .2s;
+" id="theme-toggle-btn">
+  <span id="theme-icon">☀️</span>
+  <span id="theme-label">Light Mode</span>
+</button>
+
+<script>
+  // ── THEME ──
+  const html = document.documentElement;
+  const themeIcon = document.getElementById('theme-icon');
+  const themeLabel = document.getElementById('theme-label');
+
+  function applyTheme(theme) {
+    html.setAttribute('data-theme', theme);
+    if (theme === 'light') {
+      themeIcon.textContent = '🌙';
+      themeLabel.textContent = 'Dark Mode';
+    } else {
+      themeIcon.textContent = '☀️';
+      themeLabel.textContent = 'Light Mode';
+    }
+  }
+
+  function toggleTheme() {
+    const current = html.getAttribute('data-theme');
+    const next = current === 'dark' ? 'light' : 'dark';
+    applyTheme(next);
+    localStorage.setItem('theme', next);
+  }
+
+  // Apply saved theme on load
+  const saved = localStorage.getItem('theme') || 'dark';
+  applyTheme(saved);
+
+  // ── SIDEBAR ──
+  const sidebar = document.getElementById('sidebar');
+
+  function toggleSidebar() {
+    sidebar.classList.toggle('collapsed');
+    localStorage.setItem(
+      'sb_collapsed',
+      sidebar.classList.contains('collapsed')
+    );
+  }
+
+  if (localStorage.getItem('sb_collapsed') === 'true') {
+    sidebar.classList.add('collapsed');
+  }
+</script>
+
+</body>
+
+</html>
