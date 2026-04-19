@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<style>
+  .community-wrap { padding: 32px; }
+  .page-header { display: flex; align-items: center; gap: 16px; margin-bottom: 28px; }
+  .page-header-icon { width: 52px; height: 52px; border-radius: 50%; background: var(--bg3); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 22px; }
+  .page-header h1 { font-size: 28px; font-weight: 700; color: var(--text); }
+  .page-header p { font-size: 14px; color: var(--text2); margin-top: 3px; }
+  .search-bar { display: flex; align-items: center; gap: 12px; background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 12px 18px; margin-bottom: 28px; transition: border-color .15s; }
+  .search-bar:focus-within { border-color: var(--red); }
+  .search-bar input { flex: 1; background: none; border: none; outline: none; color: var(--text); font-size: 15px; font-family: inherit; }
+  .search-bar input::placeholder { color: var(--text2); }
+  .tabs-bar { display: flex; gap: 4px; margin-bottom: 24px; }
+  .tab-btn { padding: 10px 20px; border-radius: 20px; font-size: 14px; font-weight: 600; color: var(--text2); background: none; border: 1px solid transparent; cursor: pointer; text-decoration: none; transition: all .15s; font-family: inherit; }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active { background: var(--bg3); border-color: var(--border); color: var(--text); }
+  .users-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+  .user-card { background: var(--bg3); border: 1px solid var(--border); border-radius: 12px; padding: 24px; transition: border-color .15s; }
+  .user-card:hover { border-color: var(--red); }
+  .user-card-top { display: flex; align-items: center; gap: 14px; margin-bottom: 18px; }
+  .user-av { width: 56px; height: 56px; border-radius: 50%; background: var(--red2); display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 700; color: white; overflow: hidden; flex-shrink: 0; border: 2px solid var(--border); }
+  .user-av img { width: 100%; height: 100%; object-fit: cover; }
+  .user-name { font-size: 16px; font-weight: 700; color: var(--text); text-decoration: none; display: block; }
+  .user-name:hover { color: var(--red); }
+  .user-handle { font-size: 13px; color: var(--text2); margin-top: 2px; }
+  .user-stats { display: flex; gap: 20px; margin-bottom: 16px; }
+  .user-stat .num { font-size: 15px; font-weight: 700; color: var(--text); }
+  .user-stat .lbl { font-size: 12px; color: var(--text2); margin-top: 2px; }
+  .follow-btn { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--red); color: var(--red); background: transparent; font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all .15s; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .follow-btn:hover, .follow-btn.following { background: var(--red); color: white; }
+  .empty-state { text-align: center; padding: 80px 20px; color: var(--text2); }
+  .empty-state-icon { font-size: 56px; opacity: .3; margin-bottom: 16px; }
+  .empty-state p { font-size: 15px; margin-bottom: 20px; }
+</style>
+
+<div class="community-wrap">
+
+  <div class="page-header">
+    <div class="page-header-icon"><i class="fa-solid fa-users"></i></div>
+    <div>
+      <h1>Connect with Movie Lovers</h1>
+      <p>Follow friends and discover what they're watching</p>
+    </div>
+  </div>
+
+  <form method="GET">
+    <input type="hidden" name="tab" value="{{ tab }}">
+    <div class="search-bar">
+      🔍
+      <input type="text" name="q" value="{{ query }}" placeholder="Search users..." autocomplete="off">
+    </div>
+  </form>
+
+  <div class="tabs-bar">
+    <a href="?tab=followers" class="tab-btn {% if tab == 'followers' %}active{% endif %}">
+      My Followers ({{ followers_count }})
+    </a>
+    <a href="?tab=suggestions" class="tab-btn {% if tab == 'suggestions' %}active{% endif %}">
+      Suggestions ({{ suggestions_count }})
+    </a>
+  </div>
+
+  {% if users %}
+    <div class="users-grid">
+      {% for u in users %}
+        <div class="user-card">
+          <div class="user-card-top">
+            <div class="user-av">
+              {% if u.avatar %}
+                <img src="{{ u.avatar.url }}" alt="{{ u.username }}">
+              {% else %}
+                {{ u.username|first|upper }}
+              {% endif %}
+            </div>
+            <div>
+              <a href="{% url 'profile_by_username' u.username %}" class="user-name">{{ u.username }}</a>
+              <div class="user-handle">@{{ u.username }}</div>
+            </div>
+          </div>
+
+          <div class="user-stats">
+            <div class="user-stat">
+              <div class="num">{{ u.get_followers_count }}</div>
+              <div class="lbl">followers</div>
+            </div>
+            <div class="user-stat">
+              <div class="num">{{ u.get_following_count }}</div>
+              <div class="lbl">following</div>
+            </div>
+          </div>
+
+          <a href="{% url 'follow' u.id %}?next=/users/community/?tab={{ tab }}"
+             class="follow-btn {% if u.id in following_ids %}following{% endif %}">
+            {% if u.id in following_ids %}<i class="fa-solid fa-user"></i> Unfollow{% else %}<i class="fa-solid fa-user"></i> Follow{% endif %}
+          </a>
+        </div>
+      {% endfor %}
+    </div>
+
+  {% else %}
+    <div class="empty-state">
+      <div class="empty-state-icon"><i class="fa-solid fa-users"></i></div>
+      {% if query %}
+        <p>No users found for "{{ query }}"</p>
+      {% elif tab == 'followers' %}
+        <p>You don't have any followers yet.</p>
+      {% else %}
+        <p>No suggestions available right now.</p>
+      {% endif %}
+    </div>
+  {% endif %}
+
+</div>
+
+{% endblock %}

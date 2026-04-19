@@ -358,7 +358,7 @@
           {{ user.username|first|upper }}
         </div>
       {% endif %}
-      <div class="avatar-badge">🎬</div>
+      <div class="avatar-badge"><i class="fa-solid fa-film"></i></div>
     </div>
 
     <!-- Info -->
@@ -385,14 +385,14 @@
       <!-- Collection cards -->
       <div class="collection-cards">
         <a href="?tab=lists" class="col-card">
-          <div class="col-card-icon">🕐</div>
+          <div class="col-card-icon"><i class="fa-regular fa-clock"></i></div>
           <div>
             <div class="col-card-num">0</div>
             <div class="col-card-lbl">Watch Later</div>
           </div>
         </a>
         <a href="?tab=activity" class="col-card">
-          <div class="col-card-icon">👁</div>
+          <div class="col-card-icon"><i class="fa-solid fa-eye"></i></div>
           <div>
             <div class="col-card-num">0</div>
             <div class="col-card-lbl">Watched</div>
@@ -452,7 +452,7 @@
     <!-- ACTIVITY TAB -->
     {% elif tab == 'activity' %}
       <div class="empty-state">
-        <div class="empty-state-icon">🎬</div>
+        <div class="empty-state-icon"><i class="fa-solid fa-film"></i></div>
         <p>Activity feed coming soon!<br>Track your movie watching history.</p>
       </div>
 
@@ -497,10 +497,10 @@
   </div>
 {% else %}
   <div class="empty-state">
-    <div class="empty-state-icon">👥</div>
+    <div class="empty-state-icon"><i class="fa-solid fa-users"></i></div>
     <p>Connect with friends and see what they're watching!</p>
     <a href="{% url 'home' %}" class="find-friends-btn">
-      👥 Find Friends
+      <i class="fa-solid fa-users"></i> Find Friends
     </a>
   </div>
 {% endif %}
@@ -509,10 +509,10 @@
         </div>
       {% else %}
         <div class="empty-state">
-          <div class="empty-state-icon">👥</div>
+          <div class="empty-state-icon"><i class="fa-solid fa-users"></i></div>
           <p>Connect with friends and see what they're watching!</p>
           <a href="{% url 'home' %}" class="find-friends-btn">
-            👥 Find Friends
+            <i class="fa-solid fa-users"></i> Find Friends
           </a>
         </div>
       {% endif %}
