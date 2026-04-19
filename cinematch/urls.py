@@ -20,10 +20,11 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from users import views as user_views
+from movies import views as movie_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', user_views.home_view, name='home'),
+    path('', movie_views.movie_list, name='home'), # Change this line!
     path('users/', include('users.urls')),
     path('movies/', include('movies.urls')),
     path('reviews/', include('reviews.urls')),
