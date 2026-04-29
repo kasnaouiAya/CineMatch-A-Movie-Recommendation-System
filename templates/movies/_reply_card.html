@@ -1,0 +1,68 @@
+{# Recursive reply card — called with reply=<Reply> #}
+{# Django templates don't recurse natively; we use a separate include file #}
+{# that re-includes itself for children. #}
+
+<div class="review-card" data-rid="{{ reply.pk }}">
+  <div class="review-header">
+    <div class="review-avatar">{{ reply.user.username|slice:":1"|upper }}</div>
+    <div>
+      <span class="review-username">{{ reply.user.username }}</span>
+      <span class="review-date">{{ reply.created_at|date:"M d, Y" }}</span>
+    </div>
+  </div>
+
+  {% if reply.is_spoiler %}
+    <div class="review-spoiler-overlay" id="so-rp{{ reply.pk }}">
+      <div class="overlay-blur review-body">{{ reply.body }}</div>
+      <div class="overlay-btn" onclick="revealSpoiler('so-rp{{ reply.pk }}')">
+        <span>⚠️ Spoiler — click to reveal</span>
+      </div>
+    </div>
+  {% else %}
+    <div class="review-body" id="rpb-{{ reply.pk }}">{{ reply.body }}</div>
+    <script>
+      (function(){
+        var el = document.getElementById('rpb-{{ reply.pk }}');
+        if (el) el.innerHTML = parseSpoilerTags(el.textContent);
+      })();
+    </script>
+  {% endif %}
+
+  {% if user.is_authenticated %}
+    <div class="review-actions">
+      <button class="action-btn reply-toggle-btn"
+              data-id="r{{ reply.pk }}"
+              data-review-id="{{ reply.review_id }}"
+              data-parent-id="{{ reply.pk }}">
+        💬 Reply
+      </button>
+      {% if reply.user == user or user.is_superuser %}
+        <button class="action-btn delete-btn" data-id="{{ reply.pk }}" data-type="reply">🗑️ Delete</button>
+      {% endif %}
+    </div>
+    <div class="reply-form-wrap" id="reply-form-r{{ reply.pk }}">
+      <textarea class="reply-textarea" placeholder="Write a reply…" rows="2"></textarea>
+      <div class="reply-form-footer">
+        <label class="spoiler-check">
+          <input type="checkbox" class="reply-spoiler-check"> <span>Spoiler</span>
+        </label>
+        <div style="display:flex;gap:8px;">
+          <button class="btn-reply-cancel" onclick="closeReplyForm('r{{ reply.pk }}')">Cancel</button>
+          <button class="btn-reply-submit"
+                  onclick="submitReply({{ reply.review_id }}, {{ reply.pk }})">Post</button>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+  {# Recurse into children #}
+  {% if reply.children.all %}
+    <div class="reply-children" id="children-r{{ reply.pk }}">
+      {% for child in reply.children.all %}
+        {% include "movies/_reply_card.html" with reply=child %}
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="reply-children" id="children-r{{ reply.pk }}"></div>
+  {% endif %}
+</div>

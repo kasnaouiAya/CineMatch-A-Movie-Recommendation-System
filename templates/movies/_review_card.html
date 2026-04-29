@@ -1,0 +1,84 @@
+{% load i18n %}
+{# Recursive partial — called with review=<Review> and depth=<int> #}
+{# For top-level: depth=0. Django doesn't do true recursion in templates,  #}
+{# so replies are rendered via a with block that re-includes this partial.  #}
+
+<div class="review-card" data-id="{{ review.pk }}">
+  <div class="review-header">
+    <div class="review-avatar">{{ review.user.username|slice:":1"|upper }}</div>
+    <div>
+      <span class="review-username">{{ review.user.username }}</span>
+      <span class="review-date">{{ review.created_at|date:"M d, Y" }}</span>
+    </div>
+  </div>
+
+  {# ── Body (full-review spoiler overlay or inline) ── #}
+  {% if review.is_spoiler %}
+    <div class="review-spoiler-overlay" id="so-{{ review.pk }}">
+      <div class="overlay-blur review-body">{{ review.body }}</div>
+      <div class="overlay-btn" onclick="revealSpoiler('so-{{ review.pk }}')">
+        <span>⚠️ Spoiler — click to reveal</span>
+      </div>
+    </div>
+  {% else %}
+    <div class="review-body" id="rb-{{ review.pk }}">{{ review.body }}</div>
+    <script>
+      (function(){
+        var el = document.getElementById('rb-{{ review.pk }}');
+        if (el) el.innerHTML = parseSpoilerTags(el.textContent);
+      })();
+    </script>
+  {% endif %}
+
+  {# ── Actions ── #}
+  <div class="review-actions">
+    {% if user.is_authenticated %}
+      <button class="action-btn like-btn {% if review.pk in liked_ids %}liked{% endif %}"
+              data-id="{{ review.pk }}"
+              data-liked="{% if review.pk in liked_ids %}true{% else %}false{% endif %}">
+        {% if review.pk in liked_ids %}❤️{% else %}🤍{% endif %}
+        <span class="like-count">{{ review.like_count }}</span>
+      </button>
+      <button class="action-btn reply-toggle-btn" data-id="{{ review.pk }}">💬 Reply</button>
+      {% if review.pk in reported_ids %}
+        <button class="action-btn reported" disabled>✅ Reported</button>
+      {% else %}
+        <button class="action-btn report-btn" data-id="{{ review.pk }}">🚩 Report</button>
+      {% endif %}
+      {% if review.user == user or user.is_superuser %}
+        <button class="action-btn delete-btn" data-id="{{ review.pk }}" data-type="review">🗑️ Delete</button>
+      {% endif %}
+    {% else %}
+      <span class="action-btn" style="cursor:default;">🤍 {{ review.like_count }}</span>
+    {% endif %}
+  </div>
+
+  {# ── Reply form (hidden by default) ── #}
+  {% if user.is_authenticated %}
+    <div class="reply-form-wrap" id="reply-form-{{ review.pk }}">
+      <textarea class="reply-textarea"
+                placeholder="Write a reply… use [spoiler]text[/spoiler] if needed"
+                rows="3"></textarea>
+      <div class="reply-form-footer">
+        <label class="spoiler-check">
+          <input type="checkbox" class="reply-spoiler-check"> <span>Spoiler</span>
+        </label>
+        <div style="display:flex;gap:8px;">
+          <button class="btn-reply-cancel" onclick="closeReplyForm({{ review.pk }})">Cancel</button>
+          <button class="btn-reply-submit" onclick="submitReply({{ review.pk }}, null)">Post Reply</button>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+  {# ── Existing replies (recursive) ── #}
+  {% if review.replies.all %}
+    <div class="reply-children" id="children-{{ review.pk }}">
+      {% for reply in review.replies.all %}
+        {% include "movies/_reply_card.html" with reply=reply %}
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="reply-children" id="children-{{ review.pk }}"></div>
+  {% endif %}
+</div>
