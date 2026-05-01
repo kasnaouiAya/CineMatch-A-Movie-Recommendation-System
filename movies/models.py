@@ -1,6 +1,6 @@
 
 from django.db import models
-
+from pgvector.django import VectorField
 
 class Genre(models.Model):
     name = models.CharField(max_length=100, unique=True)
@@ -29,6 +29,8 @@ class Movie(models.Model):
     genres = models.ManyToManyField(Genre, related_name='movies', blank=True)
     average_rating = models.FloatField(default=0.0)
     created_at = models.DateTimeField(auto_now_add=True)
-
+    description_vector = VectorField(dimensions=384, null=True, blank=True)
+    tmdb_rating = models.FloatField(default=0.0)
+    
     def __str__(self):
         return f'{self.title} ({self.release_year})'
