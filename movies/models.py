@@ -24,6 +24,7 @@ class Movie(models.Model):
     language = models.CharField(max_length=50, blank=True)
     content_type = models.CharField(max_length=20, choices=CONTENT_TYPES, default='movie')
     poster = models.ImageField(upload_to='posters/', blank=True, null=True)
+    poster_path = models.URLField(blank=True, null=True)
     trailer_url = models.URLField(blank=True)
     genres = models.ManyToManyField(Genre, related_name='movies', blank=True)
     average_rating = models.FloatField(default=0.0)

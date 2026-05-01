@@ -471,39 +471,14 @@
               </div>
               <div class="follower-name">{{ follower.username }}</div>
               <div class="follower-handle">@{{ follower.username }}</div>
-              {% if followers %}
-  <div class="followers-grid">
-    {% for follower in followers %}
-      <div class="follower-card">
-        <div class="follower-av">
-          {% if follower.avatar %}
-            <img src="{{ follower.avatar.url }}">
-          {% else %}
-            {{ follower.username|first|upper }}
-          {% endif %}
-        </div>
-        <div class="follower-name">{{ follower.username }}</div>
-        <div class="follower-handle">@{{ follower.username }}</div>
-        <a href="{% url 'follow' follower.id %}"
-           class="follow-toggle-btn {% if follower.id in following_ids %}following{% endif %}">
-          {% if follower.id in following_ids %}
-            Following ✓
-          {% else %}
-            Follow
-          {% endif %}
-        </a>
-      </div>
-    {% endfor %}
-  </div>
-{% else %}
-  <div class="empty-state">
-    <div class="empty-state-icon"><i class="fa-solid fa-users"></i></div>
-    <p>Connect with friends and see what they're watching!</p>
-    <a href="{% url 'home' %}" class="find-friends-btn">
-      <i class="fa-solid fa-users"></i> Find Friends
-    </a>
-  </div>
-{% endif %}
+              <a href="{% url 'follow' follower.id %}"
+                 class="follow-toggle-btn {% if follower.id in following_ids %}following{% endif %}">
+                {% if follower.id in following_ids %}
+                  Following ✓
+                {% else %}
+                  Follow
+                {% endif %}
+              </a>
             </div>
           {% endfor %}
         </div>

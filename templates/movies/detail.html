@@ -5,8 +5,8 @@
 
   <!-- ═══════════════════════════════ HEADER ═══════════════════════════════ -->
   <div class="movie-header">
-    {% if movie.poster %}
-    <img src="{{ movie.poster.url }}" alt="{{ movie.title }}" class="movie-poster">
+    {% if movie.poster_path %}
+    <img src="{{ movie.poster_path }}" alt="{{ movie.title }}" class="movie-poster" referrerpolicy="no-referrer">
     {% else %}
     <div class="movie-poster placeholder">No Poster</div>
     {% endif %}
@@ -1265,7 +1265,6 @@
     if (data.status === 'already_reported') {
       showToast("You've already reported this review.", true);
     } else {
-      // Mark the report button as reported and disable it
       const btn = document.querySelector(`.report-btn[data-id="${_reportReviewId}"]`);
       if (btn) {
         btn.textContent = '✅ Reported';
@@ -1278,10 +1277,6 @@
   }
 
   /* ══════════════════════════ SPOILER TAGS ════════════════════════════ */
-  /**
-   * Converts [spoiler]text[/spoiler] into a clickable reveal element.
-   * Call this on text that has already been HTML-escaped.
-   */
   function parseSpoilerTags(html) {
     return html.replace(
       /\[spoiler\]([\s\S]*?)\[\/spoiler\]/gi,

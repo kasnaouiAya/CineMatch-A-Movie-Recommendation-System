@@ -1,11 +1,12 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
-from django.db.models import Q, Avg
+from django.db.models import Q, Avg, Count
 from django.contrib.auth.decorators import login_required
 from .models import Movie, Genre
-from reviews.models import Rating, Review, Reply, ReviewLike, ReviewReport
+from reviews.models import Rating, Review, Reply, ReviewLike, ReviewReport, Watchlist
 from reviews.forms import ReviewForm
 from reviews import models as review_models
+import requests
 
 
 def movie_list(request):
@@ -30,6 +31,75 @@ def movie_list(request):
     })
 
 
+def trending(request):
+    TMDB_API_KEY = '4a997c6df1132cb092a65e07a38fcd77'
+
+    # ── Pull TMDB popularity scores ──────────────────────────────────────────
+    tmdb_popularity = {}
+    try:
+        for page in range(1, 4):  # fetch 3 pages = ~60 movies
+            url = (
+                f'https://api.themoviedb.org/3/discover/movie'
+                f'?api_key={TMDB_API_KEY}&language=en-US'
+                f'&sort_by=popularity.desc&page={page}'
+            )
+            resp = requests.get(url, timeout=5)
+            if resp.status_code == 200:
+                for item in resp.json().get('results', []):
+                    tmdb_popularity[item['title']] = item.get('popularity', 0)
+    except requests.exceptions.RequestException:
+        pass  # if TMDB is unreachable, just skip it
+
+    # ── Annotate movies with site data ───────────────────────────────────────
+    movies = (
+        Movie.objects
+        .prefetch_related('genres')
+        .annotate(
+            rating_count=Count('ratings', distinct=True),
+            review_count=Count('reviews', distinct=True),
+            watchlist_count=Count('watchlisted_by', distinct=True),
+            avg_score=Avg('ratings__score'),
+        )
+    )
+
+    # ── Compute trending score for each movie ────────────────────────────────
+    scored = []
+    for movie in movies:
+        avg      = movie.avg_score or 0
+        ratings  = movie.rating_count
+        reviews  = movie.review_count
+        watchlist = movie.watchlist_count
+
+        # Normalize TMDB popularity (0–100 scale, capped at 500)
+        tmdb_pop = tmdb_popularity.get(movie.title, 0)
+        tmdb_norm = min(tmdb_pop / 500, 1) * 5  # scale to 0–5
+
+        score = (
+            avg        * 0.45 +
+            ratings    * 0.25 +
+            reviews    * 0.15 +
+            watchlist  * 0.10 +
+            tmdb_norm  * 0.05
+        )
+        movie.trending_score = round(score, 3)
+        movie.avg_score = round(avg, 1)
+        scored.append(movie)
+
+    # ── Sort by trending score descending ────────────────────────────────────
+    scored.sort(key=lambda m: m.trending_score, reverse=True)
+
+    # ── Split into sections ───────────────────────────────────────────────────
+    top_movie     = scored[0] if scored else None
+    top_3         = scored[1:4] if len(scored) > 1 else []
+    rest          = scored[4:28] if len(scored) > 4 else []
+
+    return render(request, 'movies/trending.html', {
+        'top_movie': top_movie,
+        'top_3':     top_3,
+        'rest':      rest,
+    })
+
+
 def movie_detail(request, pk):
     movie   = get_object_or_404(Movie, pk=pk)
     is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
@@ -47,6 +117,8 @@ def movie_detail(request, pk):
                 new_average = Rating.objects.filter(movie=movie).aggregate(
                     avg=Avg('score')
                 )['avg'] or 0
+                movie.average_rating = round(float(new_average), 1)
+                movie.save(update_fields=['average_rating'])
                 if is_ajax:
                     return JsonResponse({
                         'status':      'ok',
