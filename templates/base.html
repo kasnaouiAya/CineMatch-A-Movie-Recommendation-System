@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <title>CineMatch</title>
+
+  <script>
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+  </script>
+
+  <style>
+    [data-theme="dark"] {
+      --bg: #1a1625;
+      --bg2: #231d35;
+      --bg3: #2d2640;
+      --text: #ffffff;
+      --text2: #9ca3af;
+      --text3: #6b7280;
+      --border: #3d3554;
+      --card: #231d35;
+      --input-bg: #2d2640;
+      --red: #7c3aed;
+      --red2: #6d28d9;
+      --gold: #f59e0b;
+    }
+    [data-theme="light"] {
+      --bg: #f0eef8;
+      --bg2: #ffffff;
+      --bg3: #e8e4f5;
+      --text: #1a0030;
+      --text2: #6b7280;
+      --text3: #9ca3af;
+      --border: #d4cce8;
+      --card: #ffffff;
+      --input-bg: #f0eef8;
+      --red: #7c3aed;
+      --red2: #6d28d9;
+      --gold: #c8890a;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      min-height: 100vh;
+      transition: background .3s, color .3s;
+    }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      width: 250px;
+      background: var(--bg2);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      flex-shrink: 0;
+      transition: width .25s ease;
+      overflow: hidden;
+      position: relative;
+    }
+    .sidebar.collapsed { width: 70px; }
+
+    .sb-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 20px 16px;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+      min-height: 64px;
+    }
+    .sb-logo-icon { font-size: 22px; flex-shrink: 0; }
+    .sb-logo-text {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--red);
+      transition: opacity .2s;
+    }
+    .sidebar.collapsed .sb-logo-text { opacity: 0; pointer-events: none; }
+
+    .sb-toggle {
+      position: absolute;
+      top: 20px;
+      right: 0px;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--red);
+      border: 2px solid var(--bg);
+      color: white;
+      font-size: 11px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      transition: transform .25s;
+    }
+    .sidebar.collapsed .sb-toggle { transform: rotate(180deg); }
+
+    .sb-role {
+      margin: 12px 10px;
+      padding: 6px;
+      border-radius: 6px;
+      text-align: center;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .1em;
+      white-space: nowrap;
+      overflow: hidden;
+      transition: opacity .2s;
+    }
+    .sidebar.collapsed .sb-role { opacity: 0; }
+    .sb-role.guest { border: 1px solid var(--border); color: var(--text2); }
+    .sb-role.user { background: var(--red2); color: white; }
+    .sb-role.admin { background: #7f1d1d; color: white; }
+
+    .sb-nav { padding: 8px; flex: 1; }
+
+    .sb-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 14px;
+      border-radius: 8px;
+      color: var(--text2);
+      font-size: 14px;
+      font-weight: 500;
+      text-decoration: none;
+      margin-bottom: 2px;
+      transition: all .15s;
+      white-space: nowrap;
+      overflow: hidden;
+      position: relative;
+    }
+    .sb-item:hover { background: var(--bg3); color: var(--text); }
+    .sb-item.active { background: var(--red2); color: white; }
+    .sb-item-icon { font-size: 18px; flex-shrink: 0; }
+    .sb-item-label { transition: opacity .2s; }
+    .sidebar.collapsed .sb-item-label { opacity: 0; pointer-events: none; }
+
+    .sb-item .tooltip {
+      display: none;
+      position: absolute;
+      left: 56px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      white-space: nowrap;
+      z-index: 100;
+    }
+    .sidebar.collapsed .sb-item:hover .tooltip { display: block; }
+
+    .sb-divider { height: 1px; background: var(--border); margin: 10px 8px; }
+    .sb-label {
+      padding: 8px 14px 4px;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: .1em;
+      color: var(--text3);
+      text-transform: uppercase;
+      white-space: nowrap;
+      transition: opacity .2s;
+    }
+    .sidebar.collapsed .sb-label { opacity: 0; }
+
+    .sb-bottom {
+      padding: 12px 8px;
+      border-top: 1px solid var(--border);
+    }
+    .sb-foot {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      color: var(--text2);
+      font-size: 14px;
+      text-decoration: none;
+      transition: all .15s;
+      cursor: pointer;
+      background: none;
+      border: none;
+      width: 100%;
+      font-family: inherit;
+      white-space: nowrap;
+      overflow: hidden;
+    }
+    .sb-foot:hover { background: var(--bg3); color: var(--text); }
+    .sb-foot-icon { font-size: 18px; flex-shrink: 0; }
+    .sb-foot-label { transition: opacity .2s; }
+    .sidebar.collapsed .sb-foot-label { opacity: 0; }
+
+    .theme-toggle {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      color: var(--text2);
+      font-size: 14px;
+      cursor: pointer;
+      background: none;
+      border: none;
+      width: 100%;
+      font-family: inherit;
+      white-space: nowrap;
+      overflow: hidden;
+      transition: all .15s;
+    }
+    .theme-toggle:hover { background: var(--bg3); color: var(--text); }
+
+    /* ── MAIN ── */
+    .main {
+      flex: 1;
+      min-width: 0;
+      background: var(--bg);
+      transition: background .3s;
+      padding: 24px;
+    }
+
+    /* ── GLOBAL ── */
+    .form-input {
+      width: 100%;
+      padding: 11px 14px;
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 14px;
+      outline: none;
+      font-family: inherit;
+      transition: border-color .2s;
+    }
+    .form-input:focus { border-color: var(--red); }
+
+    .btn-red {
+      width: 100%;
+      padding: 13px;
+      border-radius: 8px;
+      background: var(--red);
+      border: none;
+      color: white;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background .15s;
+    }
+    .btn-red:hover { background: var(--red2); }
+
+    .messages { list-style: none; }
+    .messages li {
+      padding: 10px 14px;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      font-size: 13px;
+      background: rgba(124,58,237,.1);
+      border: 1px solid rgba(124,58,237,.2);
+      color: var(--red);
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="sidebar" id="sidebar">
+
+  <button class="sb-toggle" onclick="toggleSidebar()">❮</button>
+
+  <div class="sb-logo">
+    <span class="sb-logo-icon"><i class="fa-solid fa-film"></i></span>
+    <span class="sb-logo-text">CineMatch</span>
+  </div>
+
+  {% if user.is_authenticated %}
+    {% if user.is_superuser %}
+      <div class="sb-role admin">ADMIN</div>
+    {% else %}
+      <div class="sb-role user">USER</div>
+    {% endif %}
+  {% else %}
+    <div class="sb-role guest">GUEST</div>
+  {% endif %}
+
+  <nav class="sb-nav">
+
+    {% if user.is_authenticated and user.is_superuser %}
+      <a href="{% url 'home' %}" class="sb-item {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+        <span class="sb-item-icon"><i class="fa-solid fa-gauge"></i></span>
+        <span class="sb-item-label">Dashboard</span>
+        <span class="tooltip">Dashboard</span>
+      </a>
+    {% else %}
+      <a href="{% url 'home' %}" class="sb-item {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+        <span class="sb-item-icon"><i class="fa-solid fa-house"></i></span>
+        <span class="sb-item-label">Home</span>
+        <span class="tooltip">Home</span>
+      </a>
+    {% endif %}
+
+    <a href="#" class="sb-item">
+      <span class="sb-item-icon"><i class="fa-solid fa-arrow-trend-up"></i></span>
+      <span class="sb-item-label">Trending</span>
+      <span class="tooltip">Trending</span>
+    </a>
+
+    {% if user.is_authenticated %}
+      <a href="{% url 'community' %}" class="sb-item {% if request.resolver_match.url_name == 'community' %}active{% endif %}">
+        <span class="sb-item-icon"><i class="fa-solid fa-users"></i></span>
+        <span class="sb-item-label">Community</span>
+        <span class="tooltip">Community</span>
+      </a>
+
+      <a href="{% url 'profile' %}" class="sb-item {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
+        <span class="sb-item-icon"><i class="fa-solid fa-user"></i></span>
+        <span class="sb-item-label">Profile</span>
+        <span class="tooltip">Profile</span>
+      </a>
+
+      <div class="sb-divider"></div>
+      <div class="sb-label">My Collection</div>
+
+<!-- Watchlist link is only shown to authenticated users -->
+      <a href="{% url 'watchlist' %}" class="sb-item {% if request.resolver_match.url_name == 'watchlist' %}active{% endif %}">
+        <span class="sb-item-icon"><i class="fa-solid fa-bookmark"></i></span>
+        <!-- Show count badge if there are items in the watchlist -->
+         
+        {% if user.watchlist_items.count > 0 %}
+          <span class="wl-count-badge">{{ user.watchlist_items.count }}</span>
+        {% endif %}
+        <span class="sb-item-label">Watchlist</span>
+        <!--if user.is_authenticated-->
+        <span class="tooltip">Watchlist</span>
+      </a>
+
+      <a href="{% url 'watched' %}" class="sb-item {% if request.resolver_match.url_name == 'watched' %}active{% endif %}">
+        <span class="sb-item-icon"><i class="fa-solid fa-eye"></i></span>
+        <span class="sb-item-label">Watched</span>
+        <span class="tooltip">Watched</span>
+      </a>
+    {% endif %}
+
+  </nav>
+
+  <div class="sb-bottom">
+    <button class="theme-toggle" onclick="toggleTheme()">
+      <span class="sb-item-icon" id="theme-icon"><i class="fa-solid fa-sun"></i></span>
+      <span class="sb-foot-label" id="theme-label">Light Mode</span>
+    </button>
+
+    {% if user.is_authenticated %}
+      <form method="POST" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="sb-foot">
+          <span class="sb-foot-icon"><i class="fa-solid fa-right-from-bracket"></i></span>
+          <span class="sb-foot-label">Sign Out</span>
+        </button>
+      </form>
+    {% else %}
+      <a href="{% url 'login' %}" class="sb-foot">
+        <span class="sb-foot-icon"><i class="fa-solid fa-right-to-bracket"></i></span>
+        <span class="sb-foot-label">Sign In</span>
+      </a>
+      <a href="{% url 'register' %}" class="sb-foot">
+        <span class="sb-foot-icon"><i class="fa-solid fa-user-plus"></i></span>
+        <span class="sb-foot-label">Create Account</span>
+      </a>
+    {% endif %}
+  </div>
+
+</div>
+
+<div class="main">
+  {% if messages %}
+    <ul class="messages" style="padding: 16px 24px 0;">
+      {% for message in messages %}
+        <li>{{ message }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+  {% block content %}{% endblock %}
+</div>
+
+<script>
+  const html = document.documentElement;
+  const themeIcon = document.getElementById('theme-icon');
+  const themeLabel = document.getElementById('theme-label');
+  const sidebar = document.getElementById('sidebar');
+
+  function applyTheme(theme) {
+    html.setAttribute('data-theme', theme);
+    if (theme === 'light') {
+      themeIcon.textContent = '🌙';
+      themeLabel.textContent = 'Dark Mode';
+    } else {
+      themeIcon.textContent = '☀️';
+      themeLabel.textContent = 'Light Mode';
+    }
+  }
+
+  function toggleTheme() {
+    const current = html.getAttribute('data-theme');
+    const next = current === 'dark' ? 'light' : 'dark';
+    applyTheme(next);
+    localStorage.setItem('theme', next);
+  }
+
+  applyTheme(localStorage.getItem('theme') || 'dark');
+
+  function toggleSidebar() {
+    sidebar.classList.toggle('collapsed');
+    localStorage.setItem('sb_collapsed', sidebar.classList.contains('collapsed'));
+  }
+
+  if (localStorage.getItem('sb_collapsed') === 'true') {
+    sidebar.classList.add('collapsed');
+  }
+</script>
+
+</body>
+</html>

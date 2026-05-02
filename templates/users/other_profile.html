@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<style>
+  .profile-wrap { padding: 32px 32px 0; }
+  .profile-top { display: flex; align-items: flex-start; gap: 28px; padding-bottom: 28px; position: relative; }
+  .avatar-wrap { position: relative; flex-shrink: 0; }
+  .avatar-img { width: 110px; height: 110px; border-radius: 50%; object-fit: cover; border: 3px solid var(--red); display: block; }
+  .avatar-placeholder { width: 110px; height: 110px; border-radius: 50%; background: var(--bg3); border: 3px solid var(--red); display: flex; align-items: center; justify-content: center; font-size: 40px; }
+  .avatar-badge { position: absolute; bottom: 4px; right: 4px; width: 28px; height: 28px; border-radius: 50%; background: var(--red); border: 2px solid var(--bg2); display: flex; align-items: center; justify-content: center; font-size: 13px; }
+  .profile-info { flex: 1; padding-top: 8px; }
+  .profile-username { font-size: 28px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+  .profile-handle { font-size: 14px; color: var(--text2); margin-bottom: 16px; }
+  .profile-stats { display: flex; gap: 28px; margin-bottom: 20px; }
+  .profile-stat .num { font-size: 18px; font-weight: 700; color: var(--text); }
+  .profile-stat .lbl { font-size: 13px; color: var(--red); margin-left: 5px; }
+  .follow-action-btn { position: absolute; top: 0; right: 0; display: flex; align-items: center; gap: 8px; padding: 10px 22px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; text-decoration: none; transition: all .15s; font-family: inherit; border: 1px solid var(--red); }
+  .follow-action-btn.following { background: var(--red); color: white; }
+  .follow-action-btn.not-following { background: transparent; color: var(--red); }
+  .follow-action-btn:hover { background: var(--red); color: white; }
+  .tabs-bar { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin: 0 -32px; padding: 0 32px; }
+  .tab-btn { padding: 12px 20px; font-size: 15px; font-weight: 500; color: var(--text2); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; text-decoration: none; transition: all .15s; background: none; border-top: none; border-left: none; border-right: none; font-family: inherit; }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active { color: var(--text); font-weight: 700; border-bottom-color: var(--red); }
+  .tab-content { padding: 28px 0; }
+  .lists-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+  .list-card { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 20px; transition: border-color .15s; }
+  .list-card:hover { border-color: var(--red); }
+  .list-card-icon { font-size: 20px; color: var(--red); margin-bottom: 10px; }
+  .list-card-name { font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  .list-card-count { font-size: 13px; color: var(--text2); }
+  .followers-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
+  .follower-card { background: var(--bg3); border: 1px solid var(--border); border-radius: 10px; padding: 18px 14px; text-align: center; transition: border-color .15s; }
+  .follower-card:hover { border-color: var(--red); }
+  .follower-av { width: 52px; height: 52px; border-radius: 50%; background: var(--red2); display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700; color: white; margin: 0 auto 10px; overflow: hidden; }
+  .follower-av img { width: 100%; height: 100%; object-fit: cover; }
+  .follower-name { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 3px; }
+  .follower-handle { font-size: 12px; color: var(--text2); }
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--text2); }
+  .empty-state-icon { font-size: 56px; opacity: .3; margin-bottom: 16px; }
+  .empty-state p { font-size: 15px; }
+</style>
+
+<div class="profile-wrap">
+
+  <div class="profile-top">
+    <div class="avatar-wrap">
+      {% if profile_user.avatar %}
+        <img src="{{ profile_user.avatar.url }}" class="avatar-img" alt="{{ profile_user.username }}">
+      {% else %}
+        <div class="avatar-placeholder">{{ profile_user.username|first|upper }}</div>
+      {% endif %}
+      <div class="avatar-badge"><i class="fa-solid fa-film"></i></div>
+    </div>
+
+    <div class="profile-info">
+      <div class="profile-username">{{ profile_user.username }}</div>
+      <div class="profile-handle">@{{ profile_user.username }}</div>
+      <div class="profile-stats">
+        <div class="profile-stat">
+          <span class="num">{{ followers_count }}</span>
+          <span class="lbl">Followers</span>
+        </div>
+        <div class="profile-stat">
+          <span class="num">{{ following_count }}</span>
+          <span class="lbl">Following</span>
+        </div>
+      </div>
+    </div>
+
+    <a href="{% url 'follow' profile_user.id %}?next=/users/profile/{{ profile_user.username }}/"
+       class="follow-action-btn {% if is_following %}following{% else %}not-following{% endif %}">
+      {% if is_following %}<i class="fa-solid fa-user"></i> Unfollow{% else %}<i class="fa-solid fa-user"></i> Follow{% endif %}
+    </a>
+  </div>
+
+  <div class="tabs-bar">
+    <a href="?tab=lists" class="tab-btn {% if tab == 'lists' %}active{% endif %}">Lists</a>
+    <a href="?tab=activity" class="tab-btn {% if tab == 'activity' %}active{% endif %}">Activity</a>
+    <a href="?tab=followers" class="tab-btn {% if tab == 'followers' %}active{% endif %}">Followers</a>
+  </div>
+
+  <div class="tab-content">
+    {% if tab == 'lists' %}
+      <div class="lists-grid">
+        <div class="list-card">
+          <div class="list-card-icon">♥</div>
+          <div class="list-card-name">Favorites</div>
+          <div class="list-card-count">0 movies</div>
+        </div>
+        <div class="list-card">
+          <div class="list-card-icon">♥</div>
+          <div class="list-card-name">Must Watch</div>
+          <div class="list-card-count">0 movies</div>
+        </div>
+      </div>
+
+    {% elif tab == 'activity' %}
+      <div class="empty-state">
+        <div class="empty-state-icon"><i class="fa-solid fa-film"></i></div>
+        <p>No activity yet.</p>
+      </div>
+
+    {% elif tab == 'followers' %}
+      {% if followers %}
+        <div class="followers-grid">
+          {% for follower in followers %}
+            <div class="follower-card">
+              <div class="follower-av">
+                {% if follower.avatar %}
+                  <img src="{{ follower.avatar.url }}">
+                {% else %}
+                  {{ follower.username|first|upper }}
+                {% endif %}
+              </div>
+              <div class="follower-name">{{ follower.username }}</div>
+              <div class="follower-handle">@{{ follower.username }}</div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="empty-state">
+          <div class="empty-state-icon"><i class="fa-solid fa-users"></i></div>
+          <p>No followers yet.</p>
+        </div>
+      {% endif %}
+    {% endif %}
+  </div>
+
+</div>
+
+{% endblock %}

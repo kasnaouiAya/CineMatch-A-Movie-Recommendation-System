@@ -1,0 +1,551 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="movie-detail">
+  <div class="movie-header">
+    {% if movie.poster %}
+      <img src="{{ movie.poster.url }}" alt="{{ movie.title }}" class="movie-poster">
+    {% else %}
+      <div class="movie-poster placeholder">No Poster</div>
+    {% endif %}
+
+    <div class="movie-info">
+      <h1>{{ movie.title }}</h1>
+
+      <div class="movie-meta">
+        {% if movie.release_year %}
+          <span class="meta-item">📅 {{ movie.release_year }}</span>
+        {% endif %}
+        {% if movie.duration %}
+          <span class="meta-item">⏱️ {{ movie.duration }} min</span>
+        {% endif %}
+        <span class="meta-item">🎬 {{ movie.get_content_type_display }}</span>
+        {% if movie.language %}
+          <span class="meta-item">🌐 {{ movie.language }}</span>
+        {% endif %}
+      </div>
+
+      {% if movie.genres.all %}
+        <div class="genres">
+          {% for genre in movie.genres.all %}
+            <a href="{% url 'movie_list' %}?genre={{ genre.id }}" class="genre-tag">{{ genre.name }}</a>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <div class="rating-section">
+        <span class="rating-value">★ <span id="average-display">{{ average|floatformat:1 }}</span></span>
+        <span class="rating-text">Average Rating</span>
+      </div>
+
+      <!-- ★ STAR RATING -->
+      {% if user.is_authenticated %}
+        {% if already_rated %}
+          <div class="already-rated-block" id="rating-area">
+            <div class="already-rated-stars">
+              {% for i in "12345" %}
+                <span class="star static {% if forloop.counter <= user_score %}selected{% endif %}">★</span>
+              {% endfor %}
+            </div>
+            <p class="already-rated-note">⚠️ You've already rated this movie.</p>
+          </div>
+        {% else %}
+          <form method="POST" action="{% url 'movie_detail' movie.pk %}" class="star-form" id="rating-form">
+            {% csrf_token %}
+            <input type="hidden" name="score" id="score-input" value="">
+            <div class="star-rating" id="stars">
+              {% for i in "12345" %}
+                <span class="star" data-val="{{ forloop.counter }}">★</span>
+              {% endfor %}
+            </div>
+            <button type="submit" name="rating_submit" class="btn-rate" id="rate-btn" disabled>Rate</button>
+          </form>
+        {% endif %}
+      {% endif %}
+
+      <!-- 🕐 WATCHLIST BUTTON -->
+      {% if user.is_authenticated %}
+        <button
+          id="watchlist-btn"
+          class="btn-watchlist {% if in_watchlist %}in-list{% endif %}"
+          data-url="{% url 'toggle_watchlist' movie.pk %}"
+          data-csrf="{{ csrf_token }}"
+          type="button"
+        >
+          <span class="wl-icon">{% if in_watchlist %}🕐{% else %}🕐{% endif %}</span>
+          <span class="wl-label">{% if in_watchlist %}Dans la Watchlist{% else %}+ Watchlist{% endif %}</span>
+        </button>
+      {% else %}
+        <a href="{% url 'login' %}?next={{ request.path }}" class="btn-watchlist guest">
+          <span class="wl-icon">🕐</span>
+          <span class="wl-label">Connectez-vous pour ajouter</span>
+        </a>
+      {% endif %}
+
+      <!-- 👁️ WATCHED BUTTON -->
+      {% if user.is_authenticated %}
+        <button
+          type="button"
+          id="watched-btn"
+          class="btn-watched {% if watched %}watched{% endif %} {% if not in_watchlist %}hidden{% endif %}"
+          data-url="{% url 'toggle_watched' movie.pk %}"
+          data-csrf="{{ csrf_token }}"
+        >
+          <span class="w-icon">{% if watched %}👁️{% else %}👁️‍🗨️{% endif %}</span>
+          <span class="w-label">{% if watched %}Regardé{% else %}Marquer comme regardé{% endif %}</span>
+        </button>
+      {% endif %}
+
+      {% if user.is_authenticated and not in_watchlist %}
+        <p class="watchlist-note">Ajoutez ce film à votre watchlist pour pouvoir le marquer comme regardé.</p>
+      {% endif %}
+
+      {% if movie.trailer_url %}
+        <a href="{{ movie.trailer_url }}" target="_blank" class="btn-trailer">▶️ Watch Trailer</a>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if movie.description %}
+    <div class="movie-section">
+      <h2>Description</h2>
+      <p>{{ movie.description }}</p>
+    </div>
+  {% endif %}
+
+  <!-- ✍️ REVIEWS -->
+  <div class="movie-section">
+    <h2>Reviews <span class="review-count">({{ reviews|length }})</span></h2>
+
+    {% if user.is_authenticated %}
+    <form method="POST" action="{% url 'movie_detail' movie.pk %}" class="review-form-block">
+      {% csrf_token %}
+      <textarea name="body" class="review-textarea" placeholder="Share your thoughts about this movie..." rows="4" required></textarea>
+      <button type="submit" name="review_submit" class="btn-red-sm">Post Review</button>
+    </form>
+    {% else %}
+    <p class="login-prompt"><a href="{% url 'login' %}">Sign in</a> to leave a review.</p>
+    {% endif %}
+
+    <div class="reviews-list">
+      {% for review in reviews %}
+      <div class="review-card">
+        <div class="review-header">
+          <div class="review-avatar">{{ review.user.username|slice:":1"|upper }}</div>
+          <div>
+            <span class="review-username">{{ review.user.username }}</span>
+            <span class="review-date">{{ review.created_at|date:"M d, Y" }}</span>
+          </div>
+        </div>
+        <p class="review-body">{{ review.body }}</p>
+      </div>
+      {% empty %}
+      <p class="no-reviews">No reviews yet. Be the first!</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="movie-section" style="padding: 20px 32px;">
+    <a href="{% url 'movie_list' %}" class="btn-back">← Back to Movies</a>
+  </div>
+</div>
+
+<!-- ✅ TOAST -->
+<div id="rating-toast">
+  <div class="toast-icon" id="toast-icon">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <polyline points="20 6 9 17 4 12"/>
+    </svg>
+  </div>
+  <span id="toast-message">Movie has been rated</span>
+  <button class="toast-close" onclick="closeRatingToast()">✕</button>
+</div>
+
+<style>
+  .movie-detail { padding: 40px; max-width: 1200px; margin: 0 auto; }
+
+  .movie-header {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 40px;
+    margin-bottom: 40px;
+    align-items: start;
+  }
+
+  .movie-poster {
+    width: 100%; height: auto; border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    object-fit: cover; aspect-ratio: 2/3;
+  }
+
+  .movie-poster.placeholder {
+    display: flex; align-items: center; justify-content: center;
+    background: var(--bg3); color: var(--text3);
+    border-radius: 12px; aspect-ratio: 2/3; font-size: 18px;
+  }
+
+  .movie-info h1 { font-size: 42px; font-weight: 700; color: var(--text); margin-bottom: 20px; }
+
+  .movie-meta { display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 24px; }
+  .meta-item { background: var(--bg3); padding: 8px 16px; border-radius: 6px; color: var(--text2); font-size: 14px; }
+
+  .genres { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 24px; }
+  .genre-tag {
+    background: rgba(124,58,237,0.2); border: 1px solid var(--red);
+    color: var(--red); padding: 8px 16px; border-radius: 99px;
+    text-decoration: none; font-size: 14px; font-weight: 500; transition: all 0.3s ease;
+  }
+  .genre-tag:hover { background: var(--red); color: white; }
+
+  .rating-section { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+  .rating-value { font-size: 28px; font-weight: 700; color: var(--gold); }
+  .rating-text { color: var(--text2); font-size: 14px; }
+
+  /* STAR RATING */
+  .star-form { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+  .star-rating { display: flex; gap: 4px; }
+
+  .star {
+    font-size: 28px; color: var(--bg3); cursor: pointer;
+    transition: color 0.15s, transform 0.15s; user-select: none;
+  }
+  .star.hovered, .star.selected { color: var(--gold); }
+  .star:hover { transform: scale(1.2); }
+  .star.static { cursor: default; pointer-events: none; }
+  .star.static:hover { transform: none; }
+
+  .btn-rate {
+    padding: 8px 20px; border-radius: 8px; background: var(--red);
+    color: white; font-size: 14px; font-weight: 600; border: none;
+    cursor: pointer; transition: background 0.2s, opacity 0.2s; font-family: inherit;
+  }
+  .btn-rate:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-rate:not(:disabled):hover { background: var(--red2); }
+
+  /* ALREADY RATED */
+  .already-rated-block { margin-bottom: 24px; }
+  .already-rated-stars { display: flex; gap: 4px; margin-bottom: 8px; }
+  .already-rated-note { color: var(--gold); font-size: 13px; font-weight: 500; margin: 0; }
+
+  /* ── WATCHLIST BUTTON ── */
+  .btn-watchlist {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 22px;
+    border-radius: 10px;
+    border: 1.5px solid var(--border);
+    background: var(--bg3);
+    color: var(--text2);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    margin-bottom: 20px;
+  }
+  .btn-watchlist:hover {
+    border-color: var(--red);
+    color: var(--red);
+    background: rgba(124,58,237,0.08);
+  }
+  .btn-watchlist.in-list {
+    background: rgba(124,58,237,0.15);
+    border-color: var(--red);
+    color: var(--red);
+  }
+  .btn-watchlist.in-list .wl-label::before { content: "✓ "; }
+  .btn-watchlist.guest { cursor: default; opacity: 0.6; }
+  .btn-watchlist.guest:hover { border-color: var(--border); color: var(--text2); background: var(--bg3); }
+  .wl-icon { font-size: 18px; line-height: 1; }
+
+  /* ── WATCHED BUTTON ── */
+  .btn-watched {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 22px;
+    border-radius: 10px;
+    border: 1.5px solid var(--border);
+    background: var(--bg3);
+    color: var(--text2);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    margin-bottom: 20px;
+  }
+  .btn-watched:hover {
+    border-color: var(--gold);
+    color: var(--gold);
+    background: rgba(245,158,11,0.08);
+  }
+  .btn-watched.watched {
+    background: rgba(245,158,11,0.15);
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+  .btn-watched.watched .w-label::before { content: "✓ "; }
+  .w-icon { font-size: 18px; line-height: 1; }
+
+  .hidden { display: none; }
+
+  .btn-trailer {
+    display: inline-block; background: var(--red); color: white;
+    padding: 12px 32px; border-radius: 6px; text-decoration: none;
+    font-weight: 600; transition: all 0.3s ease; margin-top: 12px;
+  }
+  .btn-trailer:hover { background: var(--red2); transform: translateY(-2px); }
+
+  /* SECTIONS */
+  .movie-section {
+    background: var(--card); border: 1px solid var(--border);
+    padding: 32px; border-radius: 12px; margin-bottom: 24px;
+  }
+  .movie-section h2 { font-size: 24px; font-weight: 700; color: var(--text); margin-bottom: 20px; }
+  .movie-section p { color: var(--text2); line-height: 1.6; font-size: 16px; }
+
+  .review-count { font-size: 16px; font-weight: 400; color: var(--text2); margin-left: 6px; }
+
+  /* REVIEW FORM */
+  .review-form-block { margin-bottom: 28px; display: flex; flex-direction: column; gap: 12px; }
+  .review-textarea {
+    width: 100%; padding: 14px 16px; background: var(--input-bg);
+    border: 1px solid var(--border); border-radius: 10px; color: var(--text);
+    font-size: 15px; font-family: inherit; resize: vertical;
+    outline: none; transition: border-color 0.2s; line-height: 1.6;
+  }
+  .review-textarea:focus { border-color: var(--red); }
+  .review-textarea::placeholder { color: var(--text3); }
+
+  .btn-red-sm {
+    align-self: flex-end; padding: 10px 28px; border-radius: 8px;
+    background: var(--red); color: white; font-size: 14px; font-weight: 600;
+    border: none; cursor: pointer; font-family: inherit; transition: background 0.2s;
+  }
+  .btn-red-sm:hover { background: var(--red2); }
+
+  .login-prompt { color: var(--text2); font-size: 14px; margin-bottom: 20px; }
+  .login-prompt a { color: var(--red); text-decoration: none; font-weight: 600; }
+  .login-prompt a:hover { text-decoration: underline; }
+
+  /* REVIEW CARDS */
+  .reviews-list { display: flex; flex-direction: column; gap: 16px; }
+  .review-card {
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 10px; padding: 18px 20px; transition: border-color 0.2s;
+  }
+  .review-card:hover { border-color: var(--red); }
+  .review-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .review-avatar {
+    width: 36px; height: 36px; border-radius: 50%; background: var(--red);
+    color: white; font-size: 15px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .review-username { display: block; font-weight: 600; color: var(--text); font-size: 14px; }
+  .review-date { display: block; font-size: 12px; color: var(--text3); margin-top: 2px; }
+  .review-body { color: var(--text2); font-size: 15px; line-height: 1.6; }
+  .no-reviews { color: var(--text3); font-size: 14px; text-align: center; padding: 24px 0; }
+
+  .btn-back {
+    display: inline-block; background: var(--bg3); color: var(--text);
+    padding: 12px 24px; border-radius: 6px; text-decoration: none;
+    font-weight: 500; transition: all 0.3s ease;
+  }
+  .btn-back:hover { background: var(--border); }
+
+  /* TOAST */
+  #rating-toast {
+    position: fixed; bottom: 28px; right: 28px;
+    background: #111827; border: 1px solid #2d3748; border-radius: 12px;
+    padding: 14px 18px; display: flex; align-items: center; gap: 12px;
+    color: #f9fafb; font-size: 14px; font-weight: 500; z-index: 9999;
+    opacity: 0; transform: translateY(12px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    pointer-events: none; box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+  }
+  #rating-toast.show { opacity: 1; transform: translateY(0); pointer-events: auto; }
+  .toast-icon {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: #14532d; color: #4ade80;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  #rating-toast.warn .toast-icon { background: #78350f; color: #fbbf24; }
+  .toast-close {
+    background: none; border: none; color: #6b7280;
+    cursor: pointer; font-size: 14px; padding: 0; margin-left: 8px; line-height: 1;
+  }
+  .toast-close:hover { color: #f9fafb; }
+
+  @media (max-width: 768px) {
+    .movie-header { grid-template-columns: 1fr; }
+    .movie-detail { padding: 20px; }
+    .movie-info h1 { font-size: 28px; }
+    .star-form { flex-wrap: wrap; }
+    #rating-toast { left: 16px; right: 16px; bottom: 16px; }
+  }
+</style>
+
+<script>
+  /* ── STAR RATING ── */
+  const stars = document.querySelectorAll('.star:not(.static)');
+  const scoreInput = document.getElementById('score-input');
+  const rateBtn = document.getElementById('rate-btn');
+  const ratingForm = document.getElementById('rating-form');
+
+  if (stars.length) {
+    stars.forEach(star => {
+      star.addEventListener('mouseenter', () => {
+        const val = +star.dataset.val;
+        stars.forEach(s => s.classList.toggle('hovered', +s.dataset.val <= val));
+      });
+      star.addEventListener('mouseleave', () => {
+        stars.forEach(s => s.classList.remove('hovered'));
+      });
+      star.addEventListener('click', () => {
+        const val = star.dataset.val;
+        scoreInput.value = val;
+        rateBtn.disabled = false;
+        stars.forEach(s => s.classList.toggle('selected', +s.dataset.val <= +val));
+      });
+    });
+  }
+
+  if (ratingForm) {
+    ratingForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(ratingForm);
+      let data = {};
+      try {
+        const res = await fetch(ratingForm.action, {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': formData.get('csrfmiddlewaretoken'),
+            'X-Requested-With': 'XMLHttpRequest',
+          },
+          body: formData,
+        });
+        data = await res.json();
+      } catch (_) {
+        data = { status: 'ok' };
+      }
+
+      if (data.status === 'already_rated') {
+        showToast("You've already rated this movie.", true);
+      } else {
+        if (data.new_average !== undefined) {
+          document.getElementById('average-display').textContent = data.new_average.toFixed(1);
+        }
+        showToast('Movie has been rated', false);
+        const score = parseInt(scoreInput.value);
+        let starsHtml = '';
+        for (let i = 1; i <= 5; i++) {
+          starsHtml += `<span class="star static ${i <= score ? 'selected' : ''}">★</span>`;
+        }
+        ratingForm.outerHTML = `
+          <div class="already-rated-block">
+            <div class="already-rated-stars">${starsHtml}</div>
+            <p class="already-rated-note">⚠️ You've already rated this movie.</p>
+          </div>`;
+      }
+    });
+  }
+
+  /* ── WATCHLIST TOGGLE ── */
+  const wlBtn = document.getElementById('watchlist-btn');
+  if (wlBtn) {
+    wlBtn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const url  = wlBtn.dataset.url;
+      const csrf = wlBtn.dataset.csrf;
+
+      try {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': csrf,
+            'X-Requested-With': 'XMLHttpRequest',
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: `csrfmiddlewaretoken=${csrf}`,
+        });
+        const data = await res.json();
+
+        const label = wlBtn.querySelector('.wl-label');
+        if (data.in_watchlist) {
+          wlBtn.classList.add('in-list');
+          label.textContent = 'Dans la Watchlist';
+          // show watched button
+          const wBtn = document.getElementById('watched-btn');
+          if (wBtn) wBtn.classList.remove('hidden');
+        } else {
+          wlBtn.classList.remove('in-list');
+          label.textContent = '+ Watchlist';
+          // hide watched button
+          const wBtn = document.getElementById('watched-btn');
+          if (wBtn) wBtn.classList.add('hidden');
+        }
+        showToast(data.message, false);
+      } catch (err) {
+        showToast('Une erreur est survenue.', true);
+      }
+    });
+  }
+
+  /* ── WATCHED TOGGLE ── */
+  const wBtn = document.getElementById('watched-btn');
+  if (wBtn) {
+    wBtn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const url  = wBtn.dataset.url;
+      const csrf = wBtn.dataset.csrf;
+
+      try {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': csrf,
+            'X-Requested-With': 'XMLHttpRequest',
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: `csrfmiddlewaretoken=${csrf}`,
+        });
+        const data = await res.json();
+
+        const label = wBtn.querySelector('.w-label');
+        const icon = wBtn.querySelector('.w-icon');
+        if (data.watched) {
+          wBtn.classList.add('watched');
+          icon.textContent = '👁️';
+          label.textContent = 'Regardé';
+        } else {
+          wBtn.classList.remove('watched');
+          icon.textContent = '👁️‍🗨️';
+          label.textContent = 'Marquer comme regardé';
+        }
+        showToast(data.message, false);
+      } catch (err) {
+        showToast('Une erreur est survenue.', true);
+      }
+    });
+  }
+
+  /* ── TOAST ── */
+  let toastTimer;
+  function showToast(message, isWarning) {
+    const toast = document.getElementById('rating-toast');
+    document.getElementById('toast-message').textContent = message;
+    toast.classList.toggle('warn', isWarning);
+    clearTimeout(toastTimer);
+    toast.classList.add('show');
+    toastTimer = setTimeout(closeRatingToast, 3500);
+  }
+  function closeRatingToast() {
+    document.getElementById('rating-toast').classList.remove('show');
+  }
+</script>
+
+{% endblock %}
