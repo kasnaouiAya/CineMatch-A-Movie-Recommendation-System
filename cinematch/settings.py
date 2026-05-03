@@ -86,23 +86,23 @@ print(f"DEBUG: Looking for templates in {BASE_DIR / 'templates'}")
 
 
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
-
 #DATABASES = {
 #    'default': {
- #       'ENGINE': 'django.db.backends.postgresql',
- #       'NAME': 'pfa_movie_db',
- #       'USER': 'postgres',
- #       'PASSWORD': 'riham',
-  #      'HOST': 'localhost',
-  #      'PORT': '5432',
-  #  }
+#        'ENGINE': 'django.db.backends.sqlite3',
+#        'NAME': BASE_DIR / 'db.sqlite3',
+#    }
 #}
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'cinematch',
+        'USER': 'postgres',
+        'PASSWORD': 'lovelyaya',
+        'HOST': 'localhost',
+        'PORT': '5432',
+    }
+}
 
 
 # Password validation
