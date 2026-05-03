@@ -85,8 +85,8 @@ class ReviewReport(models.Model):
 
 
 class Watchlist(models.Model):
-    user     = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='watchlist')
-    movie    = models.ForeignKey('movies.Movie', on_delete=models.CASCADE, related_name='watchlisted_by')
+    user     = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='reviews_watchlisted_by')
+    movie    = models.ForeignKey('movies.Movie', on_delete=models.CASCADE, related_name='reviews_watchlist')
     watched  = models.BooleanField(default=False)
     added_at = models.DateTimeField(auto_now_add=True)
 

@@ -272,3 +272,86 @@ def delete_reply(request, reply_id):
         return JsonResponse({'error': 'Forbidden'}, status=403)
     reply.delete()
     return JsonResponse({'status': 'ok'})
+
+
+@login_required
+def toggle_watchlist(request, pk):
+    """Add or remove a movie from the current user's watchlist (AJAX or redirect)."""
+    movie = get_object_or_404(Movie, pk=pk)
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+ 
+    entry = Watchlist.objects.filter(user=request.user, movie=movie).first()
+ 
+    if entry:
+        entry.delete()
+        in_watchlist = False
+        message = 'Retiré de votre watchlist'
+    else:
+        Watchlist.objects.create(user=request.user, movie=movie)
+        in_watchlist = True
+        message = 'Ajouté à votre watchlist !'
+ 
+    if is_ajax:
+        return JsonResponse({
+            'status': 'ok',
+            'in_watchlist': in_watchlist,
+            'message': message,
+        })
+ 
+    # Non-AJAX: go back to wherever the user came from
+    next_url = request.GET.get('next') or request.META.get('HTTP_REFERER') or 'movie_list'
+    return redirect(next_url)
+
+
+@login_required
+def toggle_watched(request, pk):
+    """Mark a movie as watched or unwatched (AJAX or redirect)."""
+    movie = get_object_or_404(Movie, pk=pk)
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+ 
+    entry = Watchlist.objects.filter(user=request.user, movie=movie).first()
+ 
+    if entry:
+        entry.watched = not entry.watched
+        entry.save()
+        watched = entry.watched
+        message = 'Marqué comme regardé' if watched else 'Marqué comme non regardé'
+    else:
+        # If not in watchlist, add and mark as watched
+        entry = Watchlist.objects.create(user=request.user, movie=movie, watched=True)
+        watched = True
+        message = 'Ajouté à votre watchlist et marqué comme regardé'
+ 
+    if is_ajax:
+        return JsonResponse({
+            'status': 'ok',
+            'watched': watched,
+            'message': message,
+        })
+ 
+    # Non-AJAX: go back to wherever the user came from
+    next_url = request.GET.get('next') or request.META.get('HTTP_REFERER') or 'movie_list'
+    return redirect(next_url)
+
+
+@login_required
+def watchlist_view(request):
+    """Display the current user's watchlist."""
+    items = (
+        Watchlist.objects
+        .filter(user=request.user)
+        .select_related('movie')
+        .prefetch_related('movie__genres')
+    )
+    return render(request, 'movies/watchlist.html', {'items': items})
+
+@login_required
+def watched_view(request):
+    """Display the current user's watched movies."""
+    items = (
+        Watchlist.objects
+        .filter(user=request.user, watched=True)
+        .select_related('movie')
+        .prefetch_related('movie__genres')
+    )
+    return render(request, 'movies/watched.html', {'items': items})
