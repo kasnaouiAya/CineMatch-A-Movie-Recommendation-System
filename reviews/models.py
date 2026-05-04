@@ -1,8 +1,6 @@
 from django.db import models
 from django.conf import settings
-
 REPORT_HIDE_THRESHOLD = 3   # hide a review after this many reports
-
 
 class Rating(models.Model):
     user  = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='ratings')

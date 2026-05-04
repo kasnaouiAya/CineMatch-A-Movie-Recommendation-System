@@ -7,81 +7,122 @@
     <p>Discover and explore our collection of movies, series, and documentaries</p>
   </div>
 
-  <form method="get" class="search-filters">
+  <!-- AI Search Bar -->
+  <form method="get" action="{% url 'ai_movie_search' %}" class="ai-search-bar">
     <div class="search-input-wrapper">
-      <input 
-        type="text" 
-        name="q" 
-        value="{{ query }}" 
-        placeholder="Search by title or description..." 
+      <span class="search-icon">✨</span>
+      <input
+        type="text"
+        name="q"
+        value="{% if is_ai %}{{ query|default:'' }}{% endif %}"
+        placeholder="Describe a vibe… e.g. 'heroic space adventure'"
         class="search-input"
       >
-      <span class="search-icon">🔍</span>
     </div>
-    
-    <select name="genre" class="filter-select">
+    <button type="submit" class="btn btn-ai">AI Search</button>
+  </form>
+
+  <!-- Standard Filter Bar -->
+  <form method="get" action="{% url 'movie_list' %}" class="filter-bar">
+    <div class="search-input-wrapper">
+      <span class="search-icon">🔍</span>
+      <input
+        type="text"
+        name="q"
+        value="{% if not is_ai %}{{ query|default:'' }}{% endif %}"
+        placeholder="Search by title or keyword…"
+        class="search-input"
+      >
+    </div>
+
+    <select name="genre" class="filter-select" onchange="this.form.submit()">
       <option value="">📁 All Genres</option>
       {% for genre in genres %}
-        <option value="{{ genre.id }}" {% if genre.id|stringformat:"s" == request.GET.genre %}selected{% endif %}>
+        <option value="{{ genre.id }}"
+          {% if genre.id|stringformat:"s" == request.GET.genre %}selected{% endif %}>
           {{ genre.name }}
         </option>
       {% endfor %}
     </select>
-    
-    <select name="type" class="filter-select">
+
+    <select name="type" class="filter-select" onchange="this.form.submit()">
       <option value="">🎞️ All Types</option>
-      <option value="movie" {% if request.GET.type == "movie" %}selected{% endif %}>Movie</option>
-      <option value="series" {% if request.GET.type == "series" %}selected{% endif %}>Series</option>
+      <option value="movie"       {% if request.GET.type == "movie" %}selected{% endif %}>Movie</option>
+      <option value="series"      {% if request.GET.type == "series" %}selected{% endif %}>Series</option>
       <option value="documentary" {% if request.GET.type == "documentary" %}selected{% endif %}>Documentary</option>
     </select>
-    
-    <button type="submit" class="search-btn">Search</button>
+
+    <button type="submit" class="btn btn-search">Search</button>
   </form>
+
+  {% if is_ai and query %}
+    <p class="ai-notice">✨ AI results for "<strong>{{ query }}</strong>"</p>
+  {% endif %}
+
+  <!-- Active filters summary -->
+  {% if request.GET.genre or request.GET.type or query %}
+    <div class="active-filters">
+      <span class="active-filters-label">Filtered by:</span>
+      {% if query %}<span class="active-tag">🔍 {{ query }}</span>{% endif %}
+      {% if request.GET.type %}<span class="active-tag">🎞️ {{ request.GET.type|capfirst }}</span>{% endif %}
+      {% for genre in genres %}
+        {% if genre.id|stringformat:"s" == request.GET.genre %}
+          <span class="active-tag">📁 {{ genre.name }}</span>
+        {% endif %}
+      {% endfor %}
+      <a href="{% url 'movie_list' %}" class="clear-filters">✕ Clear all</a>
+    </div>
+  {% endif %}
 
   <div class="movies-grid">
     {% for movie in movies %}
-      <a href="{% url 'movie_detail' movie.pk %}" class="movie-card">
-        <div class="movie-card-image">
-          {% if movie.poster %}
-            <img src="{{ movie.poster.url }}" alt="{{ movie.title }}">
-          {% else %}
-            <div class="placeholder-image">
-              <span>🎬</span>
-            </div>
-          {% endif %}
-          <div class="movie-card-overlay">
-            <span class="play-icon">▶️</span>
-          </div>
+  <a href="{% url 'movie_detail' movie.pk %}" class="movie-card">
+    <div class="movie-card-image">
+      
+      {# Optimized Poster Logic #}
+      {% if movie.poster %}
+        <img src="{{ movie.poster.url }}" alt="{{ movie.title }}">
+      {% elif movie.poster_path %}
+        <img src="{{ movie.poster_path }}" alt="{{ movie.title }}">
+      {% else %}
+        <div class="placeholder-image">
+          <span>🎬</span>
         </div>
-        
-        <div class="movie-card-content">
-          <h3 class="movie-title">{{ movie.title }}</h3>
-          <p class="movie-meta">
-            {% if movie.release_year %}{{ movie.release_year }} · {% endif %}
-            {{ movie.get_content_type_display }}
-          </p>
-          {% if movie.genres.all %}
-            <div class="movie-genres">
-              {% for genre in movie.genres.all|slice:":2" %}
-                <span class="genre-badge">{{ genre.name }}</span>
-              {% endfor %}
-            </div>
-          {% endif %}
-          <div class="movie-rating">
-            <span class="stars">★</span>
-            <span class="rating">{{ movie.average_rating|floatformat:1 }}</span>
-          </div>
-        </div>
-      </a>
-    {% empty %}
-      <div class="no-movies">
-        <p class="no-movies-icon">🎬</p>
-        <p class="no-movies-text">No movies found matching your search.</p>
-        <a href="{% url 'movie_list' %}" class="reset-link">Clear filters</a>
+      {% endif %}
+
+      <div class="movie-card-overlay">
+        <span class="play-icon">▶️</span>
       </div>
-    {% endfor %}
+    </div>
+
+    <div class="movie-card-content">
+      <h3 class="movie-title">{{ movie.title }}</h3>
+      <p class="movie-meta">
+        {% if movie.release_year %}{{ movie.release_year }} · {% endif %}
+        {{ movie.get_content_type_display }}
+      </p>
+      
+      {% if movie.genres.all %}
+        <div class="movie-genres">
+          {% for genre in movie.genres.all|slice:":2" %}
+            <span class="genre-badge">{{ genre.name }}</span>
+          {% endfor %}
+        </div>
+      {% endif %}
+
+      <div class="movie-rating">
+        <span class="stars">★</span>
+        <span class="rating">{{ movie.display_rating|floatformat:1 }}</span>
+      </div>
+    </div>
+  </a>
+{% empty %}
+  <div class="no-movies">
+    <p class="no-movies-icon">🎬</p>
+    <p class="no-movies-text">No movies found matching your search.</p>
+    <a href="{% url 'movie_list' %}" class="reset-link">Clear filters</a>
   </div>
-</div>
+{% endfor %}
 
 <style>
   .movies-container {
@@ -90,9 +131,7 @@
     margin: 0 auto;
   }
 
-  .movies-header {
-    margin-bottom: 40px;
-  }
+  .movies-header { margin-bottom: 32px; }
 
   .movies-header h1 {
     font-size: 40px;
@@ -101,84 +140,145 @@
     margin-bottom: 8px;
   }
 
-  .movies-header p {
-    font-size: 16px;
-    color: var(--text2);
-  }
+  .movies-header p { font-size: 16px; color: var(--text2); }
 
-  .search-filters {
-    display: grid;
-    grid-template-columns: 1fr repeat(2, 200px) 120px;
-    gap: 16px;
-    margin-bottom: 40px;
-    background: var(--card);
-    padding: 20px;
+  /* ── AI Search Bar ── */
+  .ai-search-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(124, 58, 237, 0.05);
+    padding: 14px 18px;
     border-radius: 12px;
-    border: 1px solid var(--border);
+    border: 1px solid rgba(124, 58, 237, 0.3);
+    margin-bottom: 10px;
   }
 
+  /* ── Filter Bar ── */
+  .filter-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 24px;
+  }
+
+  /* ── Search Input ── */
   .search-input-wrapper {
     position: relative;
     display: flex;
     align-items: center;
-  }
-
-  .search-input {
-    width: 100%;
-    padding: 12px 16px 12px 40px;
-    background: var(--input-bg);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    color: var(--text);
-    font-size: 14px;
-    transition: all 0.3s ease;
-  }
-
-  .search-input:focus {
-    outline: none;
-    border-color: var(--red);
-    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+    flex: 1;
+    min-width: 180px;
   }
 
   .search-icon {
     position: absolute;
     left: 12px;
-    font-size: 16px;
+    font-size: 14px;
     color: var(--text3);
+    pointer-events: none;
   }
 
+  .search-input {
+    width: 100%;
+    padding: 10px 16px 10px 36px;
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 14px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .search-input:focus {
+    outline: none;
+    border-color: var(--red);
+    box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.12);
+  }
+
+  /* ── Selects ── */
   .filter-select {
-    padding: 12px 16px;
+    padding: 10px 14px;
     background: var(--input-bg);
     border: 1px solid var(--border);
     border-radius: 8px;
     color: var(--text);
     font-size: 14px;
     cursor: pointer;
-    transition: all 0.3s ease;
+    flex-shrink: 0;
+    transition: border-color 0.2s;
   }
 
-  .filter-select:focus {
-    outline: none;
-    border-color: var(--red);
-  }
+  .filter-select:focus { outline: none; border-color: var(--red); }
 
-  .search-btn {
-    padding: 12px 24px;
-    background: var(--red);
-    color: white;
+  /* ── Buttons ── */
+  .btn {
+    padding: 10px 20px;
     border: none;
     border-radius: 8px;
     font-weight: 600;
+    font-size: 14px;
     cursor: pointer;
-    transition: all 0.3s ease;
+    white-space: nowrap;
+    transition: background 0.2s, transform 0.15s;
+    flex-shrink: 0;
   }
 
-  .search-btn:hover {
-    background: var(--red2);
-    transform: translateY(-2px);
+  .btn:hover { transform: translateY(-1px); }
+
+  .btn-ai { background: var(--red); color: #fff; }
+  .btn-ai:hover { background: var(--red2); }
+
+  .btn-search {
+    background: var(--input-bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-search:hover { border-color: var(--red); color: var(--red); }
+
+  /* ── Active Filters ── */
+  .active-filters {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 20px;
   }
 
+  .active-filters-label { font-size: 13px; color: var(--text3); margin-right: 4px; }
+
+  .active-tag {
+    background: rgba(124, 58, 237, 0.12);
+    color: var(--red);
+    border: 1px solid rgba(124, 58, 237, 0.25);
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .clear-filters {
+    font-size: 12px;
+    color: var(--text3);
+    text-decoration: none;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    transition: all 0.15s;
+  }
+
+  .clear-filters:hover { border-color: var(--red); color: var(--red); }
+
+  /* ── AI Notice ── */
+  .ai-notice { font-size: 13px; color: var(--text2); margin: -12px 0 20px; }
+  .ai-notice strong { color: var(--red); }
+
+  /* ── Movie Grid ── */
   .movies-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -193,8 +293,7 @@
     border-radius: 12px;
     overflow: hidden;
     text-decoration: none;
-    transition: all 0.3s ease;
-    cursor: pointer;
+    transition: transform 0.25s, border-color 0.25s, box-shadow 0.25s;
   }
 
   .movie-card:hover {
@@ -218,9 +317,7 @@
     transition: transform 0.3s ease;
   }
 
-  .movie-card:hover .movie-card-image img {
-    transform: scale(1.05);
-  }
+  .movie-card:hover .movie-card-image img { transform: scale(1.05); }
 
   .placeholder-image {
     width: 100%;
@@ -235,12 +332,12 @@
   .movie-card-overlay {
     position: absolute;
     inset: 0;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0,0,0,0.5);
     display: flex;
     align-items: center;
     justify-content: center;
     opacity: 0;
-    transition: opacity 0.3s ease;
+    transition: opacity 0.3s;
   }
 
   .movie-card:hover .movie-card-overlay {
@@ -250,6 +347,8 @@
   .play-icon {
     font-size: 400px;
   }
+  .movie-card:hover .movie-card-overlay { opacity: 1; }
+  .play-icon { font-size: 40px; }
 
   .movie-card-content {
     padding: 16px;
@@ -259,27 +358,26 @@
     flex: 1;
   }
 
-  .movie-title {
+.movie-title {
     font-size: 16px;
     font-weight: 600;
     color: var(--text);
     line-height: 1.3;
+
+    /* The Standard Property */
+    line-clamp: 2; 
+
+    /* Vendor Prefixes for older browsers (Chrome, Safari, Edge) */
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
+    
+    /* Required for the effect to work */
     overflow: hidden;
-  }
+}
 
-  .movie-meta {
-    font-size: 13px;
-    color: var(--text3);
-  }
-
-  .movie-genres {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-  }
+  .movie-meta { font-size: 13px; color: var(--text3); }
+  .movie-genres { display: flex; flex-wrap: wrap; gap: 6px; }
 
   .genre-badge {
     background: rgba(124, 58, 237, 0.15);
@@ -297,72 +395,36 @@
     margin-top: auto;
   }
 
-  .stars {
-    color: var(--gold);
-    font-size: 14px;
-  }
+  .stars  { color: var(--gold); font-size: 14px; }
+  .rating { color: var(--text2); font-size: 13px; font-weight: 600; }
 
-  .rating {
-    color: var(--text2);
-    font-size: 13px;
-    font-weight: 600;
-  }
-
+  /* ── Empty State ── */
   .no-movies {
-    grid-column: 1 / -1;
+    grid-column: 1/-1;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
     padding: 80px 40px;
     text-align: center;
   }
 
-  .no-movies-icon {
-    font-size: 64px;
-    margin-bottom: 16px;
-  }
+  .no-movies-icon  { font-size: 64px; margin-bottom: 16px; }
+  .no-movies-text  { color: var(--text2); font-size: 18px; margin-bottom: 24px; }
+  .reset-link      { color: var(--red); text-decoration: none; font-weight: 600; }
+  .reset-link:hover { text-decoration: underline; }
 
-  .no-movies-text {
-    color: var(--text2);
-    font-size: 18px;
-    margin-bottom: 24px;
-  }
-
-  .reset-link {
-    color: var(--red);
-    text-decoration: none;
-    font-weight: 600;
-    transition: all 0.3s ease;
-  }
-
-  .reset-link:hover {
-    text-decoration: underline;
-  }
-
+  /* ── Responsive ── */
   @media (max-width: 1024px) {
-    .search-filters {
-      grid-template-columns: 1fr;
-    }
-
-    .movies-grid {
-      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    }
+    .filter-bar { flex-wrap: wrap; }
+    .search-input-wrapper { flex: 1 1 100%; }
+    .movies-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
   }
 
   @media (max-width: 768px) {
-    .movies-container {
-      padding: 20px;
-    }
-
-    .movies-header h1 {
-      font-size: 28px;
-    }
-
-    .movies-grid {
-      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-      gap: 16px;
-    }
+    .movies-container { padding: 20px; }
+    .movies-header h1 { font-size: 28px; }
+    .filter-select, .btn { width: 100%; }
+    .movies-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 16px; }
   }
 </style>
 {% endblock %}

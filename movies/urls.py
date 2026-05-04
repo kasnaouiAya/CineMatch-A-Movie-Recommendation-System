@@ -15,4 +15,5 @@ urlpatterns = [
     path('<int:pk>/watched/',                   views.toggle_watched, name='toggle_watched'),
     path('watchlist/',                          views.watchlist_view, name='watchlist'),
     path('watched/',                            views.watched_view, name='watched'),
+    path('ai-search/',                          views.ai_movie_search, name='ai_movie_search'),
 ]
