@@ -1,6 +1,8 @@
 from django.db import models
 from django.conf import settings
+
 REPORT_HIDE_THRESHOLD = 3   # hide a review after this many reports
+
 
 class Rating(models.Model):
     user  = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='ratings')
@@ -83,8 +85,8 @@ class ReviewReport(models.Model):
 
 
 class Watchlist(models.Model):
-    user     = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='reviews_watchlisted_by')
-    movie    = models.ForeignKey('movies.Movie', on_delete=models.CASCADE, related_name='reviews_watchlist')
+    user     = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='watchlist')
+    movie    = models.ForeignKey('movies.Movie', on_delete=models.CASCADE, related_name='watchlisted_by')
     watched  = models.BooleanField(default=False)
     added_at = models.DateTimeField(auto_now_add=True)
 

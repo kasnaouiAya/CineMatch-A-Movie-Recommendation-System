@@ -26,11 +26,12 @@ class Movie(models.Model):
     poster = models.ImageField(upload_to='posters/', blank=True, null=True)
     trailer_url = models.URLField(blank=True)
     genres = models.ManyToManyField(Genre, related_name='movies', blank=True)
+    poster_path = models.CharField(max_length=255, blank=True, null=True)
     average_rating = models.FloatField(default=0.0)
     created_at = models.DateTimeField(auto_now_add=True)
     description_vector = models.JSONField(null=True, blank=True)
     tmdb_rating = models.FloatField(default=0.0)
-    
+
     def __str__(self):
         return f'{self.title} ({self.release_year})'
 
