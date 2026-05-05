@@ -126,7 +126,7 @@ def toggle_watchlist(request, pk):
     if entry:
         entry.delete()
         in_watchlist = False
-        message = 'Retiré de votre watchlist'
+        message = 'Retiré de votre watchlist !'
     else:
         Watchlist.objects.create(user=request.user, movie=movie)
         in_watchlist = True
@@ -196,3 +196,4 @@ def watched_view(request):
         .prefetch_related('movie__genres')
     )
     return render(request, 'movies/watched.html', {'items': items})
+

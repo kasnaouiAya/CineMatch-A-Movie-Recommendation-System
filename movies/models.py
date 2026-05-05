@@ -37,12 +37,12 @@ class Movie(models.Model):
 class Watchlist(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,#delete watchlist entries if user is deleted
-        related_name='watchlist'
+        on_delete=models.CASCADE, # delete watchlist entries if user is deleted
+        related_name='watchlist_items'
     )
     movie = models.ForeignKey(
         'movies.Movie',
-        on_delete=models.CASCADE,#delete watchlist entries if movie is deleted
+        on_delete=models.CASCADE, # delete watchlist entries if movie is deleted
         related_name='watchlisted_by'
     )
     #add for watched status :many users may want to mark a movie as watched without removing it from the watchlist
@@ -55,4 +55,4 @@ class Watchlist(models.Model):
         return f'{self.user.username} → {self.movie.title}' 
     
     
-    
+  

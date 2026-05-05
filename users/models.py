@@ -27,3 +27,17 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.username
+
+
+class List(models.Model):
+    user = models.ForeignKey(
+        'users.User',
+        on_delete=models.CASCADE,
+        related_name='lists'
+    )
+    name = models.CharField(max_length=150)
+    movies = models.ManyToManyField('movies.Movie', blank=True, related_name='in_lists')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'{self.user.username} - {self.name}'

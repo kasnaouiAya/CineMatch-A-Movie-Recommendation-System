@@ -334,11 +334,8 @@
 <!-- Watchlist link is only shown to authenticated users -->
       <a href="{% url 'watchlist' %}" class="sb-item {% if request.resolver_match.url_name == 'watchlist' %}active{% endif %}">
         <span class="sb-item-icon"><i class="fa-solid fa-bookmark"></i></span>
-        <!-- Show count badge if there are items in the watchlist -->
          
-        {% if user.watchlist_items.count > 0 %}
-          <span class="wl-count-badge">{{ user.watchlist_items.count }}</span>
-        {% endif %}
+        
         <span class="sb-item-label">Watchlist</span>
         <!--if user.is_authenticated-->
         <span class="tooltip">Watchlist</span>

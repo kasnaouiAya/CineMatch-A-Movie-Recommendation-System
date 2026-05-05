@@ -377,7 +377,6 @@
           <span class="lbl">Following</span>
         </div>
         <div class="profile-stat">
-          <span class="num">2</span>
           <span class="lbl">Lists</span>
         </div>
       </div>
@@ -387,14 +386,12 @@
         <a href="?tab=lists" class="col-card">
           <div class="col-card-icon"><i class="fa-regular fa-clock"></i></div>
           <div>
-            <div class="col-card-num">0</div>
-            <div class="col-card-lbl">Watch Later</div>
+            <div class="col-card-lbl">Watchlist</div>
           </div>
         </a>
         <a href="?tab=activity" class="col-card">
           <div class="col-card-icon"><i class="fa-solid fa-eye"></i></div>
           <div>
-            <div class="col-card-num">0</div>
             <div class="col-card-lbl">Watched</div>
           </div>
         </a>
@@ -434,20 +431,124 @@
           <h2>Custom Lists</h2>
           <p>Organize your movies into collections</p>
         </div>
-        <button class="create-list-btn">+ Create List</button>
+        <button class="create-list-btn" data-url="{% url 'create_list' %}" data-csrf="{{ csrf_token }}">+ Create List</button>
       </div>
       <div class="lists-grid">
-        <div class="list-card">
-          <div class="list-card-icon">♥</div>
-          <div class="list-card-name">Favorites</div>
-          <div class="list-card-count">0 movies</div>
-        </div>
-        <div class="list-card">
-          <div class="list-card-icon">♥</div>
-          <div class="list-card-name">Must Watch</div>
-          <div class="list-card-count">0 movies</div>
+        {% if lists and lists.count > 0 %}
+          {% for lst in lists %}
+            <div class="list-card">
+              <div class="list-card-icon">♥</div>
+              <div class="list-card-name">{{ lst.name }}</div>
+              <div class="list-card-count">{{ lst.movies.count }} movies</div>
+            </div>
+          {% endfor %}
+        {% else %}
+          <div class="empty-state">
+            <p>You don't have any custom lists yet. Create one to organize your movies.</p>
+          </div>
+        {% endif %}
+      </div>
+      <!-- Create List Modal -->
+      <div id="create-list-modal" class="cm-modal" style="display:none;">
+        <div class="cm-modal-backdrop"></div>
+        <div class="cm-modal-panel">
+          <div class="cm-modal-header">Create New List</div>
+          <div class="cm-modal-body">
+            <input id="create-list-name" type="text" maxlength="150" placeholder="Enter list name">
+          </div>
+          <div class="cm-modal-actions">
+            <button id="create-list-submit" class="cm-btn cm-primary">OK</button>
+            <button id="create-list-cancel" class="cm-btn">Cancel</button>
+          </div>
         </div>
       </div>
+
+      <style>
+        .hidden { display: none; }
+        .cm-modal { position: fixed; inset: 0; z-index: 1200; display:flex; align-items:center; justify-content:center; }
+        .cm-modal-backdrop { position:absolute; inset:0; background:rgba(10,6,24,0.45); backdrop-filter: blur(2px); }
+        .cm-modal-panel { position:relative; background:#fff; border-radius:12px; padding:18px; width:420px; box-shadow:0 8px 30px rgba(0,0,0,0.12); z-index:2; }
+        .cm-modal-header { font-weight:700; font-size:18px; margin-bottom:8px; color:#3b0066; }
+        .cm-modal-body label { display:block; margin-bottom:6px; color:#444; }
+        .cm-modal-body input { width:100%; padding:10px 12px; border-radius:8px; border:1px solid #ddd; outline:none; font-size:14px; }
+        .cm-modal-body input:focus { border-color:#7a2cff; box-shadow:0 0 0 4px rgba(122,44,255,0.08); }
+        .cm-modal-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:12px; }
+        .cm-btn { padding:8px 14px; border-radius:8px; border:0; cursor:pointer; background:#f2f0f6; }
+        .cm-primary { background:#7a2cff; color:#fff; }
+      </style>
+
+      <script>
+        document.addEventListener('DOMContentLoaded', function(){
+          const btn = document.querySelector('.create-list-btn');
+          const modal = document.getElementById('create-list-modal');
+          const input = document.getElementById('create-list-name');
+          const submitBtn = document.getElementById('create-list-submit');
+          const cancelBtn = document.getElementById('create-list-cancel');
+          if (!btn || !modal) return;
+
+          function openModal(){
+            modal.style.display = 'flex';
+            setTimeout(()=> input.focus(), 50);
+          }
+          function closeModal(){
+            modal.style.display = 'none';
+            input.value = '';
+          }
+
+          btn.addEventListener('click', function(e){
+            e.preventDefault();
+            openModal();
+          });
+
+          cancelBtn.addEventListener('click', function(e){
+            e.preventDefault(); closeModal();
+          });
+
+          // submit via click or enter
+          async function submitList(){
+            const name = input.value.trim();
+            if (!name) { input.focus(); return; }
+              const url = btn.dataset.url;
+              // get csrf token from data attribute or cookie as fallback
+              let csrf = btn.dataset.csrf || '';
+              function getCookie(name) {
+                const v = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+                return v ? v.pop() : '';
+              }
+              if (!csrf || csrf === 'NOTPROVIDED') csrf = getCookie('csrftoken');
+            try {
+              const res = await fetch(url, {
+                method: 'POST',
+                headers: {
+                  'X-CSRFToken': csrf,
+                  'X-Requested-With': 'XMLHttpRequest',
+                  'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `csrfmiddlewaretoken=${csrf}&name=${encodeURIComponent(name)}`
+              });
+              const data = await res.json();
+              if (data.status === 'ok') {
+                location.reload();
+              } else {
+                alert(data.message || 'Error creating list');
+              }
+            } catch (err) {
+              alert('Request failed');
+            }
+          }
+
+          submitBtn.addEventListener('click', function(e){ e.preventDefault(); submitList(); });
+
+          input.addEventListener('keydown', function(e){ if (e.key === 'Enter') { e.preventDefault(); submitList(); } if (e.key === 'Escape') { closeModal(); } });
+
+          // close when clicking backdrop or pressing Escape anywhere
+          modal.addEventListener('click', function(e){
+            const bd = modal.querySelector('.cm-modal-backdrop');
+            if (e.target === bd || e.target === modal) closeModal();
+          });
+          document.addEventListener('keydown', function(e){ if (e.key === 'Escape') { if (modal.style.display !== 'none') closeModal(); } });
+        });
+      </script>
 
     <!-- ACTIVITY TAB -->
     {% elif tab == 'activity' %}
