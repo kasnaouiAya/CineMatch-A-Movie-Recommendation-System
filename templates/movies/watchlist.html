@@ -124,7 +124,7 @@
     <div class="wl-header-left">
       <div class="wl-header-icon">🕐</div>
       <div>
-        <h1>WatchLater</h1>
+        <h1>Watchlist</h1>
         <p>Films à regarder plus tard</p>
       </div>
     </div>
@@ -150,11 +150,11 @@
         >✕</button>
 
         <div class="wl-card-img">
-          {% if item.movie.poster %}
-            <img src="{{ item.movie.poster.url }}" alt="{{ item.movie.title }}">
-          {% else %}
-            <div class="wl-card-img-placeholder">🎬</div>
-          {% endif %}
+          {% if item.movie.poster_path %}
+    <img src="https://image.tmdb.org/t/p/w500{{ item.movie.poster_path }}" alt="{{ item.movie.title }}">
+{% else %}
+    <div class="wl-card-img-placeholder">🎬</div>
+{% endif %}
         </div>
 
         <div class="wl-card-body">

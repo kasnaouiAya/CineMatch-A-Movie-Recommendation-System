@@ -1,7 +1,6 @@
-
 from django.db import models
 from django.conf import settings
-
+from pgvector.django import VectorField
 
 class Genre(models.Model):
     name = models.CharField(max_length=100, unique=True)
@@ -27,8 +26,11 @@ class Movie(models.Model):
     poster = models.ImageField(upload_to='posters/', blank=True, null=True)
     trailer_url = models.URLField(blank=True)
     genres = models.ManyToManyField(Genre, related_name='movies', blank=True)
+    poster_path = models.CharField(max_length=255, blank=True, null=True)
     average_rating = models.FloatField(default=0.0)
     created_at = models.DateTimeField(auto_now_add=True)
+    description_vector = models.JSONField(null=True, blank=True)
+    tmdb_rating = models.FloatField(default=0.0)
 
     def __str__(self):
         return f'{self.title} ({self.release_year})'
@@ -37,13 +39,13 @@ class Movie(models.Model):
 class Watchlist(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE, # delete watchlist entries if user is deleted
-        related_name='watchlist_items'
+        on_delete=models.CASCADE,#delete watchlist entries if user is deleted
+        related_name='movies_watchlisted_by'
     )
     movie = models.ForeignKey(
         'movies.Movie',
-        on_delete=models.CASCADE, # delete watchlist entries if movie is deleted
-        related_name='watchlisted_by'
+        on_delete=models.CASCADE,#delete watchlist entries if movie is deleted
+        related_name='movies_watchlist'
     )
     #add for watched status :many users may want to mark a movie as watched without removing it from the watchlist
     watched = models.BooleanField(default=False)
@@ -55,4 +57,4 @@ class Watchlist(models.Model):
         return f'{self.user.username} → {self.movie.title}' 
     
     
-  
+    

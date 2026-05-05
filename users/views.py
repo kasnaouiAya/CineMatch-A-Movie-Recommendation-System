@@ -4,8 +4,6 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from .forms import RegisterForm, LoginForm, ProfileForm
 from .models import User
-from .models import List
-from django.http import JsonResponse
 from django.db.models import Q
 
 def register_view(request):
@@ -80,31 +78,14 @@ def profile_view(request):
     followers = request.user.followers.all()
     following_ids = set(request.user.following.values_list('id', flat=True))
 
-    lists = request.user.lists.all()
-
     return render(request, 'users/profile.html', {
         'form': form,
         'tab': tab,
         'followers': followers,
         'following_ids': following_ids,
-        'lists': lists,
         'followers_count': request.user.get_followers_count(),
         'following_count': request.user.get_following_count(),
     })
-
-
-@login_required
-def create_list_view(request):
-    if request.method != 'POST':
-        return JsonResponse({'status': 'error', 'message': 'Method not allowed'}, status=405)
-
-    name = request.POST.get('name', '').strip()
-    if not name:
-        return JsonResponse({'status': 'error', 'message': 'Name is required'}, status=400)
-
-    # create the list
-    new_list = List.objects.create(user=request.user, name=name)
-    return JsonResponse({'status': 'ok', 'message': 'List created', 'id': new_list.id})
 
 @login_required
 def follow_view(request, user_id):

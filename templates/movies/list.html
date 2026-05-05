@@ -42,13 +42,13 @@
     {% for movie in movies %}
       <a href="{% url 'movie_detail' movie.pk %}" class="movie-card">
         <div class="movie-card-image">
-          {% if movie.poster %}
-            <img src="{{ movie.poster.url }}" alt="{{ movie.title }}">
-          {% else %}
-            <div class="placeholder-image">
-              <span>🎬</span>
-            </div>
-          {% endif %}
+        {% if movie.poster_path %}
+          <img src="{{ movie.poster_path }}" alt="{{ movie.title }}">
+        {% else %}
+          <div class="placeholder-image">
+            <span>🎬</span>
+          </div>
+        {% endif %}
           <div class="movie-card-overlay">
             <span class="play-icon">▶️</span>
           </div>
@@ -248,7 +248,7 @@
   }
 
   .play-icon {
-    font-size: 400px;
+    font-size: 40px;
   }
 
   .movie-card-content {
