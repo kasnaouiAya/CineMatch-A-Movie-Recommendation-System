@@ -1,16 +1,23 @@
 {% extends 'base.html' %}
 
 {% block content %}
+{% include '_icons.html' %}
+
 <div class="movies-container">
   <div class="movies-header">
-    <h1>🎬 Browse Movies</h1>
+    <h1>
+      <svg class="icon icon-lg" aria-hidden="true"><use href="#ic-film"/></svg>
+      Browse Movies
+    </h1>
     <p>Discover and explore our collection of movies, series, and documentaries</p>
   </div>
 
   <!-- AI Search Bar -->
   <form method="get" action="{% url 'ai_movie_search' %}" class="ai-search-bar">
     <div class="search-input-wrapper">
-      <span class="search-icon">✨</span>
+      <span class="search-icon">
+        <svg class="icon" aria-hidden="true"><use href="#ic-sparkle"/></svg>
+      </span>
       <input
         type="text"
         name="q"
@@ -25,7 +32,9 @@
   <!-- Standard Filter Bar -->
   <form method="get" action="{% url 'movie_list' %}" class="filter-bar">
     <div class="search-input-wrapper">
-      <span class="search-icon">🔍</span>
+      <span class="search-icon">
+        <svg class="icon" aria-hidden="true"><use href="#ic-search"/></svg>
+      </span>
       <input
         type="text"
         name="q"
@@ -36,7 +45,7 @@
     </div>
 
     <select name="genre" class="filter-select" onchange="this.form.submit()">
-      <option value="">📁 All Genres</option>
+      <option value="">All Genres</option>
       {% for genre in genres %}
         <option value="{{ genre.id }}"
           {% if genre.id|stringformat:"s" == request.GET.genre %}selected{% endif %}>
@@ -46,7 +55,7 @@
     </select>
 
     <select name="type" class="filter-select" onchange="this.form.submit()">
-      <option value="">🎞️ All Types</option>
+      <option value="">All Types</option>
       <option value="movie"       {% if request.GET.type == "movie" %}selected{% endif %}>Movie</option>
       <option value="series"      {% if request.GET.type == "series" %}selected{% endif %}>Series</option>
       <option value="documentary" {% if request.GET.type == "documentary" %}selected{% endif %}>Documentary</option>
@@ -56,21 +65,40 @@
   </form>
 
   {% if is_ai and query %}
-    <p class="ai-notice">✨ AI results for "<strong>{{ query }}</strong>"</p>
+    <p class="ai-notice">
+      <svg class="icon icon-sm" aria-hidden="true"><use href="#ic-sparkle"/></svg>
+      AI results for "<strong>{{ query }}</strong>"
+    </p>
   {% endif %}
 
   <!-- Active filters summary -->
   {% if request.GET.genre or request.GET.type or query %}
     <div class="active-filters">
       <span class="active-filters-label">Filtered by:</span>
-      {% if query %}<span class="active-tag">🔍 {{ query }}</span>{% endif %}
-      {% if request.GET.type %}<span class="active-tag">🎞️ {{ request.GET.type|capfirst }}</span>{% endif %}
+      {% if query %}
+        <span class="active-tag">
+          <svg class="icon icon-sm" aria-hidden="true"><use href="#ic-search"/></svg>
+          {{ query }}
+        </span>
+      {% endif %}
+      {% if request.GET.type %}
+        <span class="active-tag">
+          <svg class="icon icon-sm" aria-hidden="true"><use href="#ic-filmstrip"/></svg>
+          {{ request.GET.type|capfirst }}
+        </span>
+      {% endif %}
       {% for genre in genres %}
         {% if genre.id|stringformat:"s" == request.GET.genre %}
-          <span class="active-tag">📁 {{ genre.name }}</span>
+          <span class="active-tag">
+            <svg class="icon icon-sm" aria-hidden="true"><use href="#ic-folder"/></svg>
+            {{ genre.name }}
+          </span>
         {% endif %}
       {% endfor %}
-      <a href="{% url 'movie_list' %}" class="clear-filters">✕ Clear all</a>
+      <a href="{% url 'movie_list' %}" class="clear-filters">
+        <svg class="icon icon-sm" aria-hidden="true"><use href="#ic-x"/></svg>
+        Clear all
+      </a>
     </div>
   {% endif %}
 
@@ -81,10 +109,14 @@
           {% if movie.poster_path %}
             <img src="{{ movie.poster_path }}" alt="{{ movie.title }}">
           {% else %}
-            <div class="placeholder-image"><span>🎬</span></div>
+            <div class="placeholder-image">
+              <svg class="icon icon-3xl" aria-hidden="true" style="color:var(--text3)"><use href="#ic-film"/></svg>
+            </div>
           {% endif %}
           <div class="movie-card-overlay">
-            <span class="play-icon">▶️</span>
+            <span class="play-icon">
+              <svg class="icon" style="width:44px;height:44px" aria-hidden="true"><use href="#ic-play"/></svg>
+            </span>
           </div>
         </div>
         <div class="movie-card-content">
@@ -101,14 +133,16 @@
             </div>
           {% endif %}
           <div class="movie-rating">
-            <span class="stars">★</span>
+            <svg class="icon" style="color:var(--gold)" aria-hidden="true"><use href="#ic-star"/></svg>
             <span class="rating">{{ movie.display_rating|floatformat:1 }}</span>
           </div>
         </div>
       </a>
     {% empty %}
       <div class="no-movies">
-        <p class="no-movies-icon">🎬</p>
+        <div class="no-movies-icon">
+          <svg class="icon" style="width:64px;height:64px;color:var(--text3)" aria-hidden="true"><use href="#ic-film"/></svg>
+        </div>
         <p class="no-movies-text">No movies found matching your search.</p>
         <a href="{% url 'movie_list' %}" class="reset-link">Clear filters</a>
       </div>
@@ -130,6 +164,9 @@
     font-weight: 700;
     color: var(--text);
     margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
   }
 
   .movies-header p { font-size: 16px; color: var(--text2); }
@@ -171,9 +208,11 @@
   .search-icon {
     position: absolute;
     left: 12px;
-    font-size: 14px;
+    font-size: 15px;
     color: var(--text3);
     pointer-events: none;
+    display: flex;
+    align-items: center;
   }
 
   .search-input {
@@ -245,6 +284,9 @@
   .active-filters-label { font-size: 13px; color: var(--text3); margin-right: 4px; }
 
   .active-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
     background: rgba(124, 58, 237, 0.12);
     color: var(--red);
     border: 1px solid rgba(124, 58, 237, 0.25);
@@ -255,6 +297,9 @@
   }
 
   .clear-filters {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
     font-size: 12px;
     color: var(--text3);
     text-decoration: none;
@@ -267,7 +312,14 @@
   .clear-filters:hover { border-color: var(--red); color: var(--red); }
 
   /* ── AI Notice ── */
-  .ai-notice { font-size: 13px; color: var(--text2); margin: -12px 0 20px; }
+  .ai-notice {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--text2);
+    margin: -12px 0 20px;
+  }
   .ai-notice strong { color: var(--red); }
 
   /* ── Movie Grid ── */
@@ -318,7 +370,6 @@
     align-items: center;
     justify-content: center;
     background: var(--bg3);
-    font-size: 48px;
   }
 
   .movie-card-overlay {
@@ -333,7 +384,21 @@
   }
 
   .movie-card:hover .movie-card-overlay { opacity: 1; }
-  .play-icon { font-size: 40px; }
+
+  .play-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    background: rgba(255,255,255,0.15);
+    border: 1.5px solid rgba(255,255,255,0.5);
+    border-radius: 50%;
+    backdrop-filter: blur(4px);
+    transition: transform 0.2s;
+  }
+
+  .movie-card:hover .play-icon { transform: scale(1.1); }
 
   .movie-card-content {
     padding: 16px;
@@ -369,11 +434,11 @@
   .movie-rating {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 5px;
     margin-top: auto;
+    font-size: 14px;
   }
 
-  .stars  { color: var(--gold); font-size: 14px; }
   .rating { color: var(--text2); font-size: 13px; font-weight: 600; }
 
   /* ── Empty State ── */
@@ -386,7 +451,7 @@
     text-align: center;
   }
 
-  .no-movies-icon  { font-size: 64px; margin-bottom: 16px; }
+  .no-movies-icon  { margin-bottom: 16px; opacity: 0.4; }
   .no-movies-text  { color: var(--text2); font-size: 18px; margin-bottom: 24px; }
   .reset-link      { color: var(--red); text-decoration: none; font-weight: 600; }
   .reset-link:hover { text-decoration: underline; }

@@ -2,11 +2,14 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
 from django.db.models import Q, Avg, Count
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.urls import reverse
 from .models import Movie, Genre
 from reviews.models import Rating, Review, Reply, ReviewLike, ReviewReport, Watchlist
 from reviews.forms import ReviewForm
 from reviews import models as review_models
-from pgvector.django import CosineDistance 
+from pgvector.django import CosineDistance
+from users.models import Notification
 import requests
 
 # LOCAL AI IMPORT
@@ -54,7 +57,6 @@ def movie_list(request):
     if content_type:
         movies = movies.filter(content_type=content_type)
 
-    # Attach blended rating to each movie for display
     for movie in movies:
         movie.display_rating = _blended_rating(movie)
 
@@ -221,13 +223,24 @@ def movie_detail(request, pk):
 def toggle_like(request, review_id):
     if request.method != 'POST':
         return JsonResponse({'error': 'POST required'}, status=405)
+
     review = get_object_or_404(Review, pk=review_id)
     like, created = ReviewLike.objects.get_or_create(user=request.user, review=review)
+
     if not created:
         like.delete()
         liked = False
     else:
         liked = True
+        if review.user != request.user:
+            Notification.objects.create(
+                recipient=review.user,
+                sender=request.user,
+                type='like',
+                message=f'{request.user.username} liked your review of {review.movie.title}.',
+                link=reverse('movie_detail', args=[review.movie.pk]) + f'#review-{review.pk}',
+            )
+
     return JsonResponse({'status': 'ok', 'liked': liked, 'count': review.like_count})
 
 
@@ -235,6 +248,7 @@ def toggle_like(request, review_id):
 def post_reply(request, review_id):
     if request.method != 'POST':
         return JsonResponse({'error': 'POST required'}, status=405)
+
     review = get_object_or_404(Review, pk=review_id)
     body = request.POST.get('body', '').strip()
     parent_id = request.POST.get('parent_id')
@@ -251,6 +265,27 @@ def post_reply(request, review_id):
         user=request.user, review=review,
         parent=parent, body=body, is_spoiler=is_spoiler,
     )
+
+    url = reverse('movie_detail', args=[review.movie.pk]) + f'#review-{review.pk}'
+
+    if review.user != request.user:
+        Notification.objects.create(
+            recipient=review.user,
+            sender=request.user,
+            type='comment',
+            message=f'{request.user.username} commented on your review of {review.movie.title}.',
+            link=url,
+        )
+
+    if parent and parent.user != request.user and parent.user != review.user:
+        Notification.objects.create(
+            recipient=parent.user,
+            sender=request.user,
+            type='comment',
+            message=f'{request.user.username} replied to your comment on {review.movie.title}.',
+            link=url,
+        )
+
     return JsonResponse({
         'status':     'ok',
         'id':          reply.pk,
@@ -319,7 +354,6 @@ def ai_movie_search(request):
                 Q(title__icontains=query) | Q(description__icontains=query)
             )[:12]
 
-    # Attach blended rating for display
     for movie in results:
         movie.display_rating = _blended_rating(movie)
 

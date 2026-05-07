@@ -140,3 +140,26 @@ def other_profile_view(request, username):
         'followers_count': profile_user.get_followers_count(),
         'following_count': profile_user.get_following_count(),
     })
+
+
+@login_required
+def notifications_view(request):
+    tab = request.GET.get('tab', 'all')
+    notifs = request.user.notifications.all()
+
+    if tab == 'follows':
+        notifs = notifs.filter(type='follow')
+    elif tab == 'likes':
+        notifs = notifs.filter(type='like')
+    elif tab == 'comments':
+        notifs = notifs.filter(type='comment')
+
+    return render(request, 'users/notifications.html', {
+        'notifications': notifs,
+        'tab': tab,
+    })
+@login_required
+def mark_all_read(request):
+    if request.method == 'POST':
+        request.user.notifications.update(is_read=True)
+    return redirect('notifications')

@@ -309,7 +309,7 @@
     {% endif %}
 
       <a href="{% url 'trending' %}" class="sb-item {% if request.resolver_match.url_name == 'trending' %}active{% endif %}">
-        <span class="sb-item-icon"><i class="fa-solid fa-arrow-trend-up"></i></span>
+        <span class="sb-item-icon"><i class="fa-solid fa-fire"></i></span>
         <span class="sb-item-label">Trending</span>
         <span class="tooltip">Trending</span>
       </a>
@@ -319,6 +319,12 @@
         <span class="sb-item-icon"><i class="fa-solid fa-users"></i></span>
         <span class="sb-item-label">Community</span>
         <span class="tooltip">Community</span>
+      </a>
+
+      <a href="{% url 'notifications' %}" class="sb-item {% if request.resolver_match.url_name == 'notifications' %}active{% endif %}">
+        <span class="sb-item-icon"><i class="fa-regular fa-bell"></i></span>
+        <span class="sb-item-label">Notifications</span>
+        <span class="tooltip">Notifications</span>
       </a>
 
       <a href="{% url 'profile' %}" class="sb-item {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
