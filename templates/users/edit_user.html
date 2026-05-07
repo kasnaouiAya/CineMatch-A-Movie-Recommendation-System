@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+    /* Variables de thèmes basées sur tes captures */
+    :root {
+        --edit-card-bg: #ffffff;
+        --edit-text: #1A162E;
+        --edit-input: #e9efff;
+        --edit-sub: rgba(26, 22, 46, 0.6);
+    }
+
+    body.dark :root {
+        --edit-card-bg: #1A162E;
+        --edit-text: #FFFFFF;
+        --edit-input: rgba(255, 255, 255, 0.1);
+        --edit-sub: rgba(255, 255, 255, 0.6);
+    }
+
+    /* Conteneur flexible pour centrer le bloc dans l'espace disponible */
+    .center-wrapper {
+        display: flex;
+        justify-content: center; /* Centre horizontalement */
+        align-items: center;     /* Centre verticalement */
+        min-height: calc(100vh - 40px); /* Prend toute la hauteur moins un petit padding */
+        width: 100%;
+        padding: 20px;
+    }
+
+    .edit-card {
+        background: var(--edit-card-bg);
+        border-radius: 2rem;
+        padding: 2.5rem;
+        width: 100%;
+        max-width: 420px; /* Taille réduite comme demandé */
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+        text-align: center;
+        transition: all 0.3s ease;
+    }
+
+    .icon-header {
+        width: 50px;
+        height: 50px;
+        background: white;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        color: #1A162E;
+    }
+
+    h2 { color: var(--edit-text); font-weight: 800; margin-bottom: 0.3rem; }
+    .meta-text { color: var(--edit-sub); font-size: 0.85rem; margin-bottom: 2rem; }
+
+    .field-group { text-align: left; margin-bottom: 1.2rem; }
+    
+    label { 
+        display: block; 
+        font-size: 0.75rem; 
+        font-weight: 700; 
+        color: var(--edit-sub); 
+        text-transform: uppercase; 
+        margin-bottom: 0.5rem;
+    }
+
+    input {
+        width: 100%;
+        padding: 1rem;
+        border: none;
+        border-radius: 0.8rem;
+        background-color: var(--edit-input);
+        color: var(--edit-text);
+        font-weight: 600;
+        outline: none;
+    }
+
+    .btn-save {
+        width: 100%;
+        padding: 1.1rem;
+        border: none;
+        border-radius: 0.9rem;
+        background-color: #7B57FF; /* Ton violet CineMatch */
+        color: white;
+        font-weight: 700;
+        cursor: pointer;
+        margin-top: 1rem;
+    }
+
+    .back-btn {
+        display: inline-block;
+        margin-top: 1.5rem;
+        font-size: 0.8rem;
+        color: var(--edit-sub);
+        text-decoration: none;
+    }
+</style>
+
+<div class="center-wrapper">
+    <div class="edit-card">
+        <div class="icon-header">
+            <i class="fa-solid fa-film"></i>
+        </div>
+        
+        <h2>Modifier le profil</h2>
+        <p class="meta-text">Mise à jour pour <strong>{{ user_to_edit.username }}</strong></p>
+
+        <form method="POST">
+            {% csrf_token %}
+            <div class="field-group">
+                <label>Nom d'utilisateur</label>
+                <input type="text" name="username" value="{{ user_to_edit.username }}" required>
+            </div>
+            
+            <div class="field-group">
+                <label>Email</label>
+                <input type="email" name="email" value="{{ user_to_edit.email }}" required>
+            </div>
+
+            <button type="submit" class="btn-save">Sauvegarder les modifications</button>
+        </form>
+
+        <a href="{% url 'user-list' %}" class="back-btn">
+            ← Annuler
+        </a>
+    </div>
+</div>
+{% endblock %}

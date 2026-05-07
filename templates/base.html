@@ -54,7 +54,7 @@
 
     /* ── SIDEBAR ── */
     .sidebar {
-      width: 250px;
+      width: 240px;
       background: var(--bg2);
       border-right: 1px solid var(--border);
       display: flex;
@@ -65,7 +65,7 @@
       overflow: hidden;
       position: relative;
     }
-    .sidebar.collapsed { width: 70px; }
+    .sidebar.collapsed { width: 60px; }
 
     .sb-logo {
       display: flex;
@@ -88,7 +88,7 @@
     .sb-toggle {
       position: absolute;
       top: 20px;
-      right: 0px;
+      right: -12px;
       width: 24px;
       height: 24px;
       border-radius: 50%;
@@ -226,7 +226,6 @@
       min-width: 0;
       background: var(--bg);
       transition: background .3s;
-      padding: 24px;
     }
 
     /* ── GLOBAL ── */
@@ -270,6 +269,7 @@
       color: var(--red);
     }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
@@ -295,12 +295,17 @@
 
   <nav class="sb-nav">
 
-    {% if user.is_authenticated and user.is_superuser %}
-      <a href="{% url 'home' %}" class="sb-item {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
-        <span class="sb-item-icon"><i class="fa-solid fa-gauge"></i></span>
+      {% if request.user.is_superuser and user.is_authenticated%}
+<li>
+    <a href="{% url 'admin_dashboard' %}" class="sb-item {% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}">
+        <span class="sb-item-icon"><i class="fa-solid fa-chart-line"></i></span>
         <span class="sb-item-label">Dashboard</span>
         <span class="tooltip">Dashboard</span>
-      </a>
+    </a>
+</li>
+
+<!--  add more admin-only links here -->
+
     {% else %}
       <a href="{% url 'home' %}" class="sb-item {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
         <span class="sb-item-icon"><i class="fa-solid fa-house"></i></span>
@@ -309,11 +314,11 @@
       </a>
     {% endif %}
 
-    <a href="#" class="sb-item">
-      <span class="sb-item-icon"><i class="fa-solid fa-arrow-trend-up"></i></span>
-      <span class="sb-item-label">Trending</span>
-      <span class="tooltip">Trending</span>
-    </a>
+      <a href="{% url 'trending' %}" class="sb-item {% if request.resolver_match.url_name == 'trending' %}active{% endif %}">
+        <span class="sb-item-icon"><i class="fa-solid fa-arrow-trend-up"></i></span>
+        <span class="sb-item-label">Trending</span>
+        <span class="tooltip">Trending</span>
+      </a>
 
     {% if user.is_authenticated %}
       <a href="{% url 'community' %}" class="sb-item {% if request.resolver_match.url_name == 'community' %}active{% endif %}">
@@ -330,35 +335,20 @@
 
       <div class="sb-divider"></div>
       <div class="sb-label">My Collection</div>
+<a href="{% url 'watchlist' %}" class="sb-item {% if request.resolver_match.url_name == 'watchlist' %}active{% endif %}">
+    <span class="sb-item-icon"><i class="fa-regular fa-clock"></i></span>
+    <span class="sb-item-label">Watchlist</span>
+    <span class="tooltip">Watchlist</span>
+</a>
 
-<!-- Watchlist link is only shown to authenticated users -->
-      <a href="{% url 'watchlist' %}" class="sb-item {% if request.resolver_match.url_name == 'watchlist' %}active{% endif %}">
-        <span class="sb-item-icon"><i class="fa-solid fa-bookmark"></i></span>
-        <!-- Show count badge if there are items in the watchlist -->
-         
-        {% if user.watchlist_items.count > 0 %}
-          <span class="wl-count-badge">{{ user.watchlist_items.count }}</span>
-        {% endif %}
-        <span class="sb-item-label">Watchlist</span>
-        <!--if user.is_authenticated-->
-        <span class="tooltip">Watchlist</span>
-      </a>
-
-      <a href="{% url 'watched' %}" class="sb-item {% if request.resolver_match.url_name == 'watched' %}active{% endif %}">
-        <span class="sb-item-icon"><i class="fa-solid fa-eye"></i></span>
-        <span class="sb-item-label">Watched</span>
-        <span class="tooltip">Watched</span>
-      </a>
+<a href="{% url 'watched' %}" class="sb-item {% if request.resolver_match.url_name == 'watched' %}active{% endif %}">
+    <span class="sb-item-icon"><i class="fa-solid fa-eye"></i></span>
+    <span class="sb-item-label">Watched</span>
+    <span class="tooltip">Watched</span>
+</a>
     {% endif %}
-
-  </nav>
-
-  <div class="sb-bottom">
-    <button class="theme-toggle" onclick="toggleTheme()">
-      <span class="sb-item-icon" id="theme-icon"><i class="fa-solid fa-sun"></i></span>
-      <span class="sb-foot-label" id="theme-label">Light Mode</span>
-    </button>
-
+          <div class="sb-divider"></div>
+      <div class="sb-label">Account</div>
     {% if user.is_authenticated %}
       <form method="POST" action="{% url 'logout' %}">
         {% csrf_token %}
@@ -377,6 +367,16 @@
         <span class="sb-foot-label">Create Account</span>
       </a>
     {% endif %}
+
+  </nav>
+
+  <div class="sb-bottom">
+    <button class="theme-toggle" onclick="toggleTheme()">
+      <span class="sb-item-icon" id="theme-icon"><i class="fa-solid fa-sun"></i></span>
+      <span class="sb-foot-label" id="theme-label">Light Mode</span>
+    </button>
+
+    
   </div>
 
 </div>

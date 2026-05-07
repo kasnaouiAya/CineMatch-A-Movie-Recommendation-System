@@ -95,13 +95,13 @@ DATABASES = {
 
 #DATABASES = {
 #    'default': {
- #       'ENGINE': 'django.db.backends.postgresql',
- #       'NAME': 'pfa_movie_db',
- #       'USER': 'postgres',
- #       'PASSWORD': 'riham',
-  #      'HOST': 'localhost',
-  #      'PORT': '5432',
-  #  }
+#        'ENGINE': 'django.db.backends.postgresql',
+#        'NAME': 'pfa_movie_db',
+#        'USER': 'aya',
+#        'PASSWORD': 'riham',
+#        'HOST': 'localhost',
+#        'PORT': '5432',
+#    }
 #}
 
 
