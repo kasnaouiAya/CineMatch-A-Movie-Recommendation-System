@@ -26,7 +26,6 @@
     padding: 4px 12px; border-radius: 99px;
   }
 
-  /* Grid */
   .wl-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -59,7 +58,6 @@
     font-size: 48px; color: var(--text3);
   }
 
-  /* Remove button — top-right corner */
   .wl-remove-btn {
     position: absolute; top: 8px; right: 8px;
     width: 32px; height: 32px; border-radius: 50%;
@@ -67,7 +65,7 @@
     color: white; font-size: 15px;
     display: flex; align-items: center; justify-content: center;
     cursor: pointer; opacity: 0; transition: opacity 0.2s;
-    z-index: 2; font-family: inherit;
+    z-index: 3; font-family: inherit;
   }
   .wl-card:hover .wl-remove-btn { opacity: 1; }
   .wl-remove-btn:hover { background: #c0392b; }
@@ -91,16 +89,12 @@
   .wl-card-link {
     position: absolute; inset: 0; z-index: 1;
   }
-  /* raise remove button above the link overlay */
-  .wl-remove-btn { z-index: 3; }
 
-  /* Added date */
   .wl-added-date {
     font-size: 11px; color: var(--text3);
     margin-top: 6px;
   }
 
-  /* Empty state */
   .wl-empty {
     grid-column: 1 / -1;
     display: flex; flex-direction: column; align-items: center;
@@ -137,24 +131,20 @@
     {% for item in items %}
       <div class="wl-card" id="wl-card-{{ item.movie.pk }}">
 
-        <!-- Invisible link covering the card -->
         <a href="{% url 'movie_detail' item.movie.pk %}" class="wl-card-link" aria-label="{{ item.movie.title }}"></a>
 
-        <!-- Remove button -->
-        <button
-          class="wl-remove-btn"
-          title="Retirer de la watchlist"
-          data-url="{% url 'toggle_watchlist' item.movie.pk %}"
-          data-csrf="{{ csrf_token }}"
-          data-card-id="wl-card-{{ item.movie.pk }}"
-        >✕</button>
+        <!-- Bouton supprimer -->
+        <form method="POST" action="{% url 'remove_from_watch_later' item.movie.pk %}" style="position: absolute; top: 8px; right: 8px; z-index: 3;">
+          {% csrf_token %}
+          <button type="submit" class="wl-remove-btn" title="Retirer de Watch Later">✕</button>
+        </form>
 
         <div class="wl-card-img">
           {% if item.movie.poster_path %}
-    <img src="https://image.tmdb.org/t/p/w500{{ item.movie.poster_path }}" alt="{{ item.movie.title }}">
-{% else %}
-    <div class="wl-card-img-placeholder">🎬</div>
-{% endif %}
+            <img src="https://image.tmdb.org/t/p/w500{{ item.movie.poster_path }}" alt="{{ item.movie.title }}">
+          {% else %}
+            <div class="wl-card-img-placeholder">🎬</div>
+          {% endif %}
         </div>
 
         <div class="wl-card-body">
@@ -189,42 +179,5 @@
     {% endfor %}
   </div>
 </div>
-
-<script>
-  document.querySelectorAll('.wl-remove-btn').forEach(btn => {
-    btn.addEventListener('click', async (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-
-      const url    = btn.dataset.url;
-      const csrf   = btn.dataset.csrf;
-      const cardId = btn.dataset.cardId;
-
-      try {
-        const res = await fetch(url, {
-          method: 'POST',
-          headers: {
-            'X-CSRFToken': csrf,
-            'X-Requested-With': 'XMLHttpRequest',
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-          body: `csrfmiddlewaretoken=${csrf}`,
-        });
-        const data = await res.json();
-
-        if (!data.in_watchlist) {
-          // Animate card out then remove from DOM
-          const card = document.getElementById(cardId);
-          card.style.transition = 'opacity 0.3s, transform 0.3s';
-          card.style.opacity = '0';
-          card.style.transform = 'scale(0.9)';
-          setTimeout(() => card.remove(), 300);
-        }
-      } catch (err) {
-        console.error('Watchlist error:', err);
-      }
-    });
-  });
-</script>
 
 {% endblock %}

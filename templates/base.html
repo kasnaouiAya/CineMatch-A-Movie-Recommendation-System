@@ -269,6 +269,7 @@
       color: var(--red);
     }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
@@ -294,12 +295,17 @@
 
   <nav class="sb-nav">
 
-    {% if user.is_authenticated and user.is_superuser %}
-      <a href="{% url 'home' %}" class="sb-item {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
-        <span class="sb-item-icon"><i class="fa-solid fa-gauge"></i></span>
+      {% if request.user.is_superuser and user.is_authenticated%}
+<li>
+    <a href="{% url 'admin_dashboard' %}" class="sb-item {% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}">
+        <span class="sb-item-icon"><i class="fa-solid fa-chart-line"></i></span>
         <span class="sb-item-label">Dashboard</span>
         <span class="tooltip">Dashboard</span>
-      </a>
+    </a>
+</li>
+
+<!--  add more admin-only links here -->
+
     {% else %}
       <a href="{% url 'home' %}" class="sb-item {% if request.resolver_match.url_name == 'home' %}active{% endif %}">
         <span class="sb-item-icon"><i class="fa-solid fa-house"></i></span>
@@ -331,8 +337,8 @@
       <div class="sb-label">My Collection</div>
 <a href="{% url 'watchlist' %}" class="sb-item {% if request.resolver_match.url_name == 'watchlist' %}active{% endif %}">
     <span class="sb-item-icon"><i class="fa-regular fa-clock"></i></span>
-    <span class="sb-item-label">Watch Later</span>
-    <span class="tooltip">Watch Later</span>
+    <span class="sb-item-label">Watchlist</span>
+    <span class="tooltip">Watchlist</span>
 </a>
 
 <a href="{% url 'watched' %}" class="sb-item {% if request.resolver_match.url_name == 'watched' %}active{% endif %}">
@@ -341,15 +347,8 @@
     <span class="tooltip">Watched</span>
 </a>
     {% endif %}
-
-  </nav>
-
-  <div class="sb-bottom">
-    <button class="theme-toggle" onclick="toggleTheme()">
-      <span class="sb-item-icon" id="theme-icon"><i class="fa-solid fa-sun"></i></span>
-      <span class="sb-foot-label" id="theme-label">Light Mode</span>
-    </button>
-
+          <div class="sb-divider"></div>
+      <div class="sb-label">Account</div>
     {% if user.is_authenticated %}
       <form method="POST" action="{% url 'logout' %}">
         {% csrf_token %}
@@ -368,6 +367,16 @@
         <span class="sb-foot-label">Create Account</span>
       </a>
     {% endif %}
+
+  </nav>
+
+  <div class="sb-bottom">
+    <button class="theme-toggle" onclick="toggleTheme()">
+      <span class="sb-item-icon" id="theme-icon"><i class="fa-solid fa-sun"></i></span>
+      <span class="sb-foot-label" id="theme-label">Light Mode</span>
+    </button>
+
+    
   </div>
 
 </div>

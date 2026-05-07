@@ -42,7 +42,7 @@
             data-csrf="{{ csrf_token }}"
             style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--bg3); color: var(--text2); font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.2s;">
         <span class="wl-icon">{% if in_watchlist %}✓{% else %}+{% endif %}</span>
-        <span class="wl-label">{% if in_watchlist %}Dans la Watchlist{% else %}+ Watchlist{% endif %}</span>
+        <span class="wl-label">{% if in_watchlist %}Dans la Watchlist{% else %} Watchlist{% endif %}</span>
     </button>
     
     <button id="watched-btn" class="btn-watched {% if watched %}watched{% endif %} {% if not in_watchlist %}hidden{% endif %}" 

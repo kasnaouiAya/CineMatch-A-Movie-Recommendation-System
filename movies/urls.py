@@ -14,4 +14,7 @@ urlpatterns = [
     path('<int:pk>/watched/',                   views.toggle_watched,   name='toggle_watched'),
     path('watchlist/',                          views.watchlist_view,   name='watchlist'),
     path('watched/',                            views.watched_view,     name='watched'),  # ← ADD THIS
+    path('admin/dashboard/', views.admin_dashboard, name='admin_dashboard'),    
+
+    
 ]

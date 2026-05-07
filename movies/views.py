@@ -2,11 +2,19 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
 from django.db.models import Q, Avg, Count
 from django.contrib.auth.decorators import login_required
-from .models import Movie, Genre
-from reviews.models import Rating, Review, Reply, ReviewLike, ReviewReport, Watchlist
+from .models import Movie, Genre, Watched, Watchlist
+from reviews.models import Rating, Review, Reply, ReviewLike, ReviewReport
 from reviews.forms import ReviewForm
 from reviews import models as review_models
 import requests
+from django.contrib import messages
+from django.db.models import Count
+from django.utils import timezone
+from datetime import timedelta
+from .models import User
+from reviews.models import UserReport
+from movies.models import Movie
+
 
 
 def movie_list(request):
@@ -171,14 +179,18 @@ def movie_detail(request, pk):
     )
     average = Rating.objects.filter(movie=movie).aggregate(avg=Avg('score'))['avg'] or 0
 
-        # Watchlist status
+    
+        # Watchlist & Watched status
     in_watchlist = False
     watched = False
     if request.user.is_authenticated:
-        watchlist_entry = Watchlist.objects.filter(user=request.user, movie=movie).first()
-        if watchlist_entry:
-            in_watchlist = True
-            watched = watchlist_entry.watched
+        in_watchlist = Watchlist.objects.filter(
+            user=request.user, movie=movie
+        ).exists()
+        
+        watched = Watched.objects.filter(
+            user=request.user, movie=movie
+        ).exists()
 
     return render(request, 'movies/detail.html', {
         'movie':        movie,
@@ -308,31 +320,33 @@ def toggle_watchlist(request, pk):
         'message': message,
     })
 
-
 # ── WATCHED TOGGLE ───────────────────────────────────────────────────────────
 @login_required
 def toggle_watched(request, pk):
     if request.method != 'POST':
         return JsonResponse({'error': 'POST required'}, status=405)
-    movie = get_object_or_404(Movie, pk=pk)
-    entry = Watchlist.objects.filter(user=request.user, movie=movie).first()
     
-    if entry:
-        entry.watched = not entry.watched
-        entry.save()
-        watched = entry.watched
-        message = 'Marqué comme regardé' if watched else 'Marqué comme non regardé'
+    movie = get_object_or_404(Movie, pk=pk)
+    
+    # ✅ Automatically remove from Watchlist when marking as watched
+    Watchlist.objects.filter(user=request.user, movie=movie).delete()
+    
+    # Toggle Watched status
+    if Watched.objects.filter(user=request.user, movie=movie).exists():
+        Watched.objects.filter(user=request.user, movie=movie).delete()
+        is_watched = False
+        message = 'Retiré des films regardés'
     else:
-        entry = Watchlist.objects.create(user=request.user, movie=movie, watched=True)
-        watched = True
-        message = 'Ajouté à votre watchlist et marqué comme regardé'
+        Watched.objects.create(user=request.user, movie=movie)
+        is_watched = True
+        message = 'Ajouté aux films regardés !'
     
     return JsonResponse({
         'status': 'ok',
-        'watched': watched,
+        'watched': is_watched,
+        'in_watchlist': False,   # Important: now it's no longer in watchlist
         'message': message,
     })
-
 
 # ── WATCHLIST VIEW ───────────────────────────────────────────────────────────
 @login_required
@@ -344,5 +358,44 @@ def watchlist_view(request):
 # ── WATCHED VIEW ─────────────────────────────────────────────────────────────
 @login_required
 def watched_view(request):
-    items = Watchlist.objects.filter(user=request.user, watched=True).select_related('movie').order_by('-added_at')
-    return render(request, 'movies/watchlist.html', {'items': items})
+    """Page Watched - affiche les films déjà regardés"""
+    items = Watched.objects.filter(
+        user=request.user
+    ).select_related('movie').order_by('-watched_at')
+    
+    return render(request, 'movies/watched.html', {'items': items})
+
+
+
+# ── ADMIN DASHBOARD ─────────────────────────────────────────────────────────
+@login_required
+def admin_dashboard(request):
+    if not request.user.is_superuser:
+        messages.error(request, "Accès réservé aux administrateurs uniquement.")
+        return redirect('home')
+
+    # Statistiques
+    total_movies = Movie.objects.count()
+    total_users = User.objects.count()
+    total_reviews = Review.objects.count()
+    
+    # Récupération des signalements depuis reviews.models
+    # On ajoute select_related pour que le dashboard ne rame pas
+    reports = UserReport.objects.select_related('review', 'review__user', 'reporter').order_by('-created_at')
+
+    # Données récentes
+    recent_movies = Movie.objects.order_by('-created_at')[:6]
+    recent_reviews = Review.objects.select_related('user', 'movie').order_by('-created_at')[:6]
+
+    context = {
+        'total_movies': total_movies,
+        'total_users': total_users,
+        'total_reviews': total_reviews,
+        'reports': reports, # On ajoute les rapports au contexte
+        'recent_movies': recent_movies,
+        'recent_reviews': recent_reviews,
+    }
+    return render(request, 'admin/dashboard.html', context)
+
+
+

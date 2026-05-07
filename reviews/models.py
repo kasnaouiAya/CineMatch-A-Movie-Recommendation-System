@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from django.contrib.auth.models import User
 
 REPORT_HIDE_THRESHOLD = 3   # hide a review after this many reports
 
@@ -84,14 +85,26 @@ class ReviewReport(models.Model):
         return f'{self.user.username} reported review #{self.review_id} ({self.reason})'
 
 
-class Watchlist(models.Model):
-    user     = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='watchlist')
-    movie    = models.ForeignKey('movies.Movie', on_delete=models.CASCADE, related_name='watchlisted_by')
-    watched  = models.BooleanField(default=False)
-    added_at = models.DateTimeField(auto_now_add=True)
+
+
+class UserReport(models.Model):
+    REASONS = [
+        ('SPAM', 'Spam'),
+        ('HARASSMENT', 'Harassment'),
+        ('SPOILER', 'Unmarked Spoiler'),
+        ('INAPPROPRIATE', 'Inappropriate Content'),
+    ]
+    
+    # 1. Utilisation de settings.AUTH_USER_MODEL
+    # 2. Changement de related_name pour éviter les conflits avec ReviewReport
+    review = models.ForeignKey('Review', on_delete=models.CASCADE, related_name='user_content_reports')
+    reporter = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='user_submitted_reports')
+    
+    reason = models.CharField(max_length=20, choices=REASONS, default='SPAM')
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ('user', 'movie')
+        unique_together = ('review', 'reporter')
 
     def __str__(self):
-        return f'{self.user.username} — {self.movie.title}'
+        return f"Report on Review {self.review.id} by {self.reporter.username}"

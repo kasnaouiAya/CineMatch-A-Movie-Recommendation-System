@@ -1,8 +1,9 @@
-{% extends 'base.html' %}
-{% block content %}
+{% extends 'base.html' %} {% block content %}
 
 <style>
-  .profile-wrap { padding: 32px 32px 0; }
+  .profile-wrap {
+    padding: 32px 32px 0;
+  }
 
   /* ── TOP SECTION ── */
   .profile-top {
@@ -28,7 +29,7 @@
     font-weight: 500;
     cursor: pointer;
     text-decoration: none;
-    transition: all .15s;
+    transition: all 0.15s;
   }
   .edit-profile-btn:hover {
     border-color: var(--red);
@@ -75,7 +76,10 @@
   }
 
   /* ── USER INFO ── */
-  .profile-info { flex: 1; padding-top: 8px; }
+  .profile-info {
+    flex: 1;
+    padding-top: 8px;
+  }
   .profile-username {
     font-size: 28px;
     font-weight: 700;
@@ -118,14 +122,16 @@
     padding: 14px 20px;
     min-width: 150px;
     text-decoration: none;
-    transition: border-color .15s;
+    transition: border-color 0.15s;
   }
-  .col-card:hover { border-color: var(--red); }
+  .col-card:hover {
+    border-color: var(--red);
+  }
   .col-card-icon {
     width: 36px;
     height: 36px;
     border-radius: 50%;
-    background: rgba(192,57,43,.15);
+    background: rgba(192, 57, 43, 0.15);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -162,14 +168,16 @@
     border-bottom: 2px solid transparent;
     margin-bottom: -1px;
     text-decoration: none;
-    transition: all .15s;
+    transition: all 0.15s;
     background: none;
     border-top: none;
     border-left: none;
     border-right: none;
     font-family: inherit;
   }
-  .tab-btn:hover { color: var(--text); }
+  .tab-btn:hover {
+    color: var(--text);
+  }
   .tab-btn.active {
     color: var(--text);
     font-weight: 700;
@@ -177,7 +185,9 @@
   }
 
   /* ── TAB CONTENT ── */
-  .tab-content { padding: 28px 0; }
+  .tab-content {
+    padding: 28px 0;
+  }
 
   /* My Lists */
   .lists-header {
@@ -209,10 +219,12 @@
     font-weight: 600;
     cursor: pointer;
     font-family: inherit;
-    transition: background .15s;
+    transition: background 0.15s;
     flex-shrink: 0;
   }
-  .create-list-btn:hover { background: var(--red2); }
+  .create-list-btn:hover {
+    background: var(--red2);
+  }
   .lists-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
@@ -224,9 +236,14 @@
     border-radius: 10px;
     padding: 20px;
     cursor: pointer;
-    transition: border-color .15s;
+    transition: border-color 0.15s;
+    text-decoration: none;
+    color: inherit;
+    display: block;
   }
-  .list-card:hover { border-color: var(--red); }
+  .list-card:hover {
+    border-color: var(--red);
+  }
   .list-card-icon {
     font-size: 20px;
     color: var(--red);
@@ -251,7 +268,7 @@
   }
   .empty-state-icon {
     font-size: 56px;
-    opacity: .3;
+    opacity: 0.3;
     margin-bottom: 16px;
   }
   .empty-state p {
@@ -273,9 +290,11 @@
     cursor: pointer;
     font-family: inherit;
     text-decoration: none;
-    transition: background .15s;
+    transition: background 0.15s;
   }
-  .find-friends-btn:hover { background: var(--red2); }
+  .find-friends-btn:hover {
+    background: var(--red2);
+  }
 
   /* Followers list */
   .followers-grid {
@@ -289,9 +308,11 @@
     border-radius: 10px;
     padding: 18px 14px;
     text-align: center;
-    transition: border-color .15s;
+    transition: border-color 0.15s;
   }
-  .follower-card:hover { border-color: var(--red); }
+  .follower-card:hover {
+    border-color: var(--red);
+  }
   .follower-av {
     width: 52px;
     height: 52px;
@@ -333,7 +354,7 @@
     font-weight: 600;
     cursor: pointer;
     font-family: inherit;
-    transition: all .15s;
+    transition: all 0.15s;
     text-decoration: none;
     display: block;
   }
@@ -342,21 +363,90 @@
     background: var(--red);
     color: white;
   }
+
+  /* Modal */
+  .cm-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1200;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+  .cm-modal.show {
+    display: flex;
+  }
+  .cm-modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(10, 6, 24, 0.45);
+    backdrop-filter: blur(2px);
+  }
+  .cm-modal-panel {
+    position: relative;
+    background: var(--bg2);
+    border-radius: 12px;
+    padding: 24px;
+    width: 420px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+    z-index: 2;
+    border: 1px solid var(--border);
+  }
+  .cm-modal-header {
+    font-weight: 700;
+    font-size: 18px;
+    margin-bottom: 16px;
+    color: var(--text);
+  }
+  .cm-modal-body input {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--bg3);
+    color: var(--text);
+    outline: none;
+    font-size: 14px;
+  }
+  .cm-modal-body input:focus {
+    border-color: var(--red);
+    box-shadow: 0 0 0 4px rgba(192, 57, 43, 0.15);
+  }
+  .cm-modal-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 16px;
+  }
+  .cm-btn {
+    padding: 10px 18px;
+    border-radius: 8px;
+    border: 0;
+    cursor: pointer;
+    background: var(--bg3);
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 500;
+  }
+  .cm-btn.cm-primary {
+    background: var(--red);
+    color: white;
+  }
 </style>
 
 <div class="profile-wrap">
-
   <!-- ── TOP ── -->
   <div class="profile-top">
-
     <!-- Avatar -->
     <div class="avatar-wrap">
       {% if user.avatar %}
-        <img src="{{ user.avatar.url }}" class="avatar-img" alt="{{ user.username }}">
+      <img
+        src="{{ user.avatar.url }}"
+        class="avatar-img"
+        alt="{{ user.username }}"
+      />
       {% else %}
-        <div class="avatar-placeholder">
-          {{ user.username|first|upper }}
-        </div>
+      <div class="avatar-placeholder">{{ user.username|first|upper }}</div>
       {% endif %}
       <div class="avatar-badge"><i class="fa-solid fa-film"></i></div>
     </div>
@@ -377,24 +467,24 @@
           <span class="lbl">Following</span>
         </div>
         <div class="profile-stat">
-          <span class="num">2</span>
+          <span class="num">{{ lists_count }}</span>
           <span class="lbl">Lists</span>
         </div>
       </div>
 
-      <!-- Collection cards -->
+      <!-- Collection cards with REAL counts -->
       <div class="collection-cards">
-        <a href="?tab=lists" class="col-card">
+        <a href="{% url 'watchlist' %}" class="col-card">
           <div class="col-card-icon"><i class="fa-regular fa-clock"></i></div>
           <div>
-            <div class="col-card-num">0</div>
+            <div class="col-card-num">{{ watchlist_count }}</div>
             <div class="col-card-lbl">Watch Later</div>
           </div>
         </a>
-        <a href="?tab=activity" class="col-card">
+        <a href="{% url 'watched' %}" class="col-card">
           <div class="col-card-icon"><i class="fa-solid fa-eye"></i></div>
           <div>
-            <div class="col-card-num">0</div>
+            <div class="col-card-num">{{ watched_count }}</div>
             <div class="col-card-lbl">Watched</div>
           </div>
         </a>
@@ -402,124 +492,249 @@
     </div>
 
     <!-- Edit profile -->
-    <a href="?tab=edit" class="edit-profile-btn">
-      ⚙️ Edit Profile
-    </a>
-
+    <a href="?tab=edit" class="edit-profile-btn"> ⚙️ Edit Profile </a>
   </div>
 
   <!-- ── TABS ── -->
   <div class="tabs-bar">
-    <a href="?tab=lists"
-       class="tab-btn {% if tab == 'lists' %}active{% endif %}">
+    <a
+      href="?tab=lists"
+      class="tab-btn {% if tab == 'lists' %}active{% endif %}"
+    >
       My Lists
     </a>
-    <a href="?tab=activity"
-       class="tab-btn {% if tab == 'activity' %}active{% endif %}">
+    <a
+      href="?tab=activity"
+      class="tab-btn {% if tab == 'activity' %}active{% endif %}"
+    >
       Activity
     </a>
-    <a href="?tab=followers"
-       class="tab-btn {% if tab == 'followers' %}active{% endif %}">
+    <a
+      href="?tab=followers"
+      class="tab-btn {% if tab == 'followers' %}active{% endif %}"
+    >
       Followers
     </a>
   </div>
 
   <!-- ── TAB CONTENT ── -->
   <div class="tab-content">
-
-    <!-- MY LISTS TAB -->
+        <!-- MY LISTS TAB -->
     {% if tab == 'lists' %}
       <div class="lists-header">
         <div>
           <h2>Custom Lists</h2>
           <p>Organize your movies into collections</p>
         </div>
-        <button class="create-list-btn">+ Create List</button>
+        <button class="create-list-btn" id="createListBtn">+ Create List</button>
       </div>
       <div class="lists-grid">
-        <div class="list-card">
+
+        <!-- Watch Later -->
+        <a href="#" class="list-card">
+          <div class="list-card-icon">🕐</div>
+          <div class="list-card-name">Watch Later</div>
+          <div class="list-card-count">{{ watchlist_count }} movie{{ watchlist_count|pluralize }}</div>
+        </a>
+
+        <!-- Watched -->
+        <a href="#" class="list-card">
+          <div class="list-card-icon">✅</div>
+          <div class="list-card-name">Watched</div>
+          <div class="list-card-count">{{ watched_count }} movie{{ watched_count|pluralize }}</div>
+        </a>
+
+        <!-- Favorites -->
+        <a href="#" class="list-card">
           <div class="list-card-icon">♥</div>
           <div class="list-card-name">Favorites</div>
-          <div class="list-card-count">0 movies</div>
-        </div>
-        <div class="list-card">
-          <div class="list-card-icon">♥</div>
+          <div class="list-card-count">{{ favorites_count }} movie{{ favorites_count|pluralize }}</div>
+        </a>
+
+        <!-- Must Watch -->
+        <a href="#" class="list-card">
+          <div class="list-card-icon">★</div>
           <div class="list-card-name">Must Watch</div>
-          <div class="list-card-count">0 movies</div>
+          <div class="list-card-count">{{ must_watch_count }} movie{{ must_watch_count|pluralize }}</div>
+        </a>
+
+        <!-- Custom lists -->
+{% for lst in custom_lists %}
+  <div class="list-card" style="position: relative;">
+    <a href="#" style="text-decoration: none; color: inherit; display: block;">
+      {% comment %} <div class="list-card-icon">📁</div> {% endcomment %}
+      <div class="list-card-name">{{ lst.name }}</div>
+      <div class="list-card-count">{{ lst.movie_count }} movie{{ lst.movie_count|pluralize }}</div>
+    </a>
+    
+    <!-- Bouton supprimer -->
+    <form method="POST" action="{% url 'delete_list' lst.id %}" 
+          style="position: absolute; top: 10px; right: 10px;"
+          onsubmit="return confirm('Delete list &quot;{{ lst.name }}&quot;?');">
+      {% csrf_token %}
+      <button type="submit" style="
+        background: transparent;
+        border: none;
+        color: var(--text2);
+        cursor: pointer;
+        font-size: 16px;
+        padding: 4px;
+        border-radius: 4px;
+        transition: all 0.15s;
+      " onmouseover="this.style.color='var(--red)'" 
+        onmouseout="this.style.color='var(--text2)'">
+        <i class="fa-solid fa-trash"></i>
+      </button>
+    </form>
+  </div>
+{% endfor %}
+
+      </div>
+
+      <!-- Create List Modal -->
+      <div id="create-list-modal" class="cm-modal">
+        <div class="cm-modal-backdrop"></div>
+        <div class="cm-modal-panel">
+          <div class="cm-modal-header">Create New List</div>
+          <div class="cm-modal-body">
+            <input id="create-list-name" type="text" maxlength="150" placeholder="Enter list name">
+          </div>
+          <div class="cm-modal-actions">
+            <button id="create-list-submit" class="cm-btn cm-primary">Create</button>
+            <button id="create-list-cancel" class="cm-btn">Cancel</button>
+          </div>
         </div>
       </div>
+
+      <script>
+        document.addEventListener('DOMContentLoaded', function(){
+          const btn = document.getElementById('createListBtn');
+          const modal = document.getElementById('create-list-modal');
+          const input = document.getElementById('create-list-name');
+          const submitBtn = document.getElementById('create-list-submit');
+          const cancelBtn = document.getElementById('create-list-cancel');
+          const csrfToken = '{{ csrf_token }}';
+
+          function openModal(){ modal.classList.add('show'); setTimeout(()=>input.focus(),50); }
+          function closeModal(){ modal.classList.remove('show'); input.value=''; }
+
+          btn.addEventListener('click', function(e){ e.preventDefault(); openModal(); });
+          cancelBtn.addEventListener('click', closeModal);
+
+          async function submitList(){
+            const name = input.value.trim();
+            if (!name){ input.focus(); return; }
+            try {
+              const res = await fetch("{% url 'create_list' %}", {
+                method: 'POST',
+                headers: {
+                  'X-CSRFToken': csrfToken,
+                  'X-Requested-With': 'XMLHttpRequest',
+                  'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: `name=${encodeURIComponent(name)}`
+              });
+              
+              // Vérifier d'abord si c'est du JSON valide
+              const contentType = res.headers.get('content-type');
+              if (!contentType || !contentType.includes('application/json')) {
+                const text = await res.text();
+                console.error('Server returned HTML:', text.substring(0, 200));
+                throw new Error('Server error - check console');
+              }
+              
+              const data = await res.json();
+              if (data.status === 'ok'){ 
+                location.reload(); 
+              } else { 
+                alert(data.message || 'Error creating list'); 
+              }
+            } catch(err){ 
+              console.error('Full error:', err);
+              alert('Request failed: ' + err.message); 
+            }
+          }
+
+          submitBtn.addEventListener('click', function(e){ e.preventDefault(); submitList(); });
+          input.addEventListener('keydown', function(e){
+            if(e.key==='Enter'){ e.preventDefault(); submitList(); }
+            if(e.key==='Escape'){ closeModal(); }
+          });
+          modal.addEventListener('click', function(e){
+            if(e.target===modal.querySelector('.cm-modal-backdrop')) closeModal();
+          });
+        });
+      </script>
 
     <!-- ACTIVITY TAB -->
     {% elif tab == 'activity' %}
-      <div class="empty-state">
-        <div class="empty-state-icon"><i class="fa-solid fa-film"></i></div>
-        <p>Activity feed coming soon!<br>Track your movie watching history.</p>
-      </div>
+    <div class="empty-state">
+      <div class="empty-state-icon"><i class="fa-solid fa-film"></i></div>
+      <p>Activity feed coming soon!<br />Track your movie watching history.</p>
+    </div>
 
     <!-- FOLLOWERS TAB -->
-    {% elif tab == 'followers' %}
-      {% if followers %}
-        <div class="followers-grid">
-          {% for follower in followers %}
-            <div class="follower-card">
-              <div class="follower-av">
-                {% if follower.avatar %}
-                  <img src="{{ follower.avatar.url }}">
-                {% else %}
-                  {{ follower.username|first|upper }}
-                {% endif %}
-              </div>
-              <div class="follower-name">{{ follower.username }}</div>
-              <div class="follower-handle">@{{ follower.username }}</div>
-              <a href="{% url 'follow' follower.id %}"
-                 class="follow-toggle-btn {% if follower.id in following_ids %}following{% endif %}">
-                {% if follower.id in following_ids %}
-                  Following ✓
-                {% else %}
-                  Follow
-                {% endif %}
-              </a>
-            </div>
-          {% endfor %}
+    {% elif tab == 'followers' %} {% if followers %}
+    <div class="followers-grid">
+      {% for follower in followers %}
+      <div class="follower-card">
+        <div class="follower-av">
+          {% if follower.avatar %}
+          <img src="{{ follower.avatar.url }}" />
+          {% else %} {{ follower.username|first|upper }} {% endif %}
         </div>
-      {% else %}
-        <div class="empty-state">
-          <div class="empty-state-icon"><i class="fa-solid fa-users"></i></div>
-          <p>Connect with friends and see what they're watching!</p>
-          <a href="{% url 'home' %}" class="find-friends-btn">
-            <i class="fa-solid fa-users"></i> Find Friends
-          </a>
-        </div>
-      {% endif %}
+        <div class="follower-name">{{ follower.username }}</div>
+        <div class="follower-handle">@{{ follower.username }}</div>
+        <a
+          href="{% url 'follow' follower.id %}"
+          class="follow-toggle-btn {% if follower.id in following_ids %}following{% endif %}"
+        >
+          {% if follower.id in following_ids %} Following ✓ {% else %} Follow {%endif %}
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-state-icon"><i class="fa-solid fa-users"></i></div>
+      <p>Connect with friends and see what they're watching!</p>
+      <a href="{% url 'home' %}" class="find-friends-btn">
+        <i class="fa-solid fa-users"></i> Find Friends
+      </a>
+    </div>
+    {% endif %}
 
     <!-- EDIT PROFILE TAB -->
     {% elif tab == 'edit' %}
-      <div style="max-width:520px;">
-        <h2 style="font-size:20px; font-weight:700; margin-bottom:20px;">
-          Edit Profile
-        </h2>
-        <form method="POST" enctype="multipart/form-data">
-          {% csrf_token %}
-          {% for field in form %}
-            <div style="margin-bottom:18px;">
-              <label style="display:block; font-size:13px; font-weight:500; color:var(--text2); margin-bottom:6px;">
-                {{ field.label }}
-              </label>
-              {{ field }}
-              {% if field.errors %}
-                <p style="color:#f87171; font-size:12px; margin-top:5px;">
-                  {{ field.errors|join:", " }}
-                </p>
-              {% endif %}
-            </div>
-          {% endfor %}
-          <button type="submit" class="create-list-btn">
-            Save Changes
-          </button>
-        </form>
-      </div>
+    <div style="max-width: 520px">
+      <h2 style="font-size: 20px; font-weight: 700; margin-bottom: 20px">
+        Edit Profile
+      </h2>
+      <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %} {% for field in form %}
+        <div style="margin-bottom: 18px">
+          <label
+            style="
+              display: block;
+              font-size: 13px;
+              font-weight: 500;
+              color: var(--text2);
+              margin-bottom: 6px;
+            "
+          >
+            {{ field.label }}
+          </label>
+          {{ field }} {% if field.errors %}
+          <p style="color: #f87171; font-size: 12px; margin-top: 5px">
+            {{ field.errors|join:", " }}
+          </p>
+          {% endif %}
+        </div>
+        {% endfor %}
+        <button type="submit" class="create-list-btn">Save Changes</button>
+      </form>
+    </div>
     {% endif %}
-
   </div>
 </div>
 
