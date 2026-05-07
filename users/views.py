@@ -194,99 +194,174 @@ def other_profile_view(request, username):
     })
 
 
+
+@login_required
+def notifications_view(request):
+    tab = request.GET.get('tab', 'all')
+    notifs = request.user.notifications.all()
+
+    if tab == 'follows':
+        notifs = notifs.filter(type='follow')
+    elif tab == 'likes':
+        notifs = notifs.filter(type='like')
+    elif tab == 'comments':
+        notifs = notifs.filter(type='comment')
+
+    return render(request, 'users/notifications.html', {
+        'notifications': notifs,
+        'tab': tab,
+    })
+
+
+@login_required
+def mark_all_read(request):
+    if request.method == 'POST':
+        request.user.notifications.update(is_read=True)
+
+    return redirect('notifications')
+
+
 @login_required
 def watchlist_view(request):
-    """Page Watch Later - affiche les films à regarder plus tard"""
-    items = Watchlist.objects.filter(user=request.user).select_related('movie').order_by('-added_at')
+    items = Watchlist.objects.filter(user=request.user)\
+        .select_related('movie')\
+        .order_by('-added_at')
+
     return render(request, 'users/watchlist.html', {'items': items})
+
 
 @login_required
 def watched_view(request):
-    """Page Watched - affiche les films déjà regardés"""
-    items = Watched.objects.filter(user=request.user).select_related('movie').order_by('-watched_at')
+    items = Watched.objects.filter(user=request.user)\
+        .select_related('movie')\
+        .order_by('-watched_at')
+
     return render(request, 'users/watched.html', {'items': items})
+
 
 @login_required
 def add_to_watch_later(request, movie_id):
     movie = get_object_or_404(Movie, id=movie_id)
-    Watchlist.objects.get_or_create(user=request.user, movie=movie)
+
+    Watchlist.objects.get_or_create(
+        user=request.user,
+        movie=movie
+    )
+
     return redirect(request.META.get('HTTP_REFERER', 'watchlist'))
+
 
 @login_required
 def remove_from_watch_later(request, movie_id):
     movie = get_object_or_404(Movie, id=movie_id)
-    Watchlist.objects.filter(user=request.user, movie=movie).delete()
+
+    Watchlist.objects.filter(
+        user=request.user,
+        movie=movie
+    ).delete()
+
     return redirect(request.META.get('HTTP_REFERER', 'watchlist'))
+
 
 @login_required
 def add_to_watched(request, movie_id):
     movie = get_object_or_404(Movie, id=movie_id)
-    
-    #  Remove from Watchlist first
-    Watchlist.objects.filter(user=request.user, movie=movie).delete()
-    
-    # Add to Watched
-    Watched.objects.get_or_create(user=request.user, movie=movie)
-    
+
+    Watchlist.objects.filter(
+        user=request.user,
+        movie=movie
+    ).delete()
+
+    Watched.objects.get_or_create(
+        user=request.user,
+        movie=movie
+    )
+
     return redirect(request.META.get('HTTP_REFERER', 'watched'))
+
 
 @login_required
 def remove_from_watched(request, movie_id):
     movie = get_object_or_404(Movie, id=movie_id)
-    Watched.objects.filter(user=request.user, movie=movie).delete()
+
+    Watched.objects.filter(
+        user=request.user,
+        movie=movie
+    ).delete()
+
     return redirect(request.META.get('HTTP_REFERER', 'watched'))
+
 
 @login_required
 def list_detail_view(request, list_id):
-    movie_list = get_object_or_404(MovieList, id=list_id, user=request.user)
-    items = MovieListItem.objects.filter(movie_list=movie_list).select_related('movie')
+    movie_list = get_object_or_404(
+        MovieList,
+        id=list_id,
+        user=request.user
+    )
+
+    items = MovieListItem.objects.filter(
+        movie_list=movie_list
+    ).select_related('movie')
+
     return render(request, 'users/list_detail.html', {
         'movie_list': movie_list,
         'items': items
     })
-    
 
 
 @staff_member_required
-# Liste des utilisateurs
 def user_list_view(request):
     users = User.objects.all().order_by('-date_joined')
-    return render(request, 'users/user_list.html', {'users': users})
 
-# Suppression d'un utilisateur
+    return render(request, 'users/user_list.html', {
+        'users': users
+    })
+
+@staff_member_required
 def delete_user(request, user_id):
     if request.method == 'POST':
         user_to_delete = get_object_or_404(User, id=user_id)
-        if not user_to_delete.is_superuser: # Sécurité : ne pas supprimer l'admin
+
+        if not user_to_delete.is_superuser:
             user_to_delete.delete()
             messages.success(request, "Utilisateur supprimé avec succès.")
         else:
             messages.error(request, "Impossible de supprimer un administrateur.")
+
     return redirect('user-list')
 
-# Vue de modification 
+@staff_member_required
 def edit_user_view(request, user_id):
     user_to_edit = get_object_or_404(User, id=user_id)
+
     if request.method == 'POST':
         user_to_edit.username = request.POST.get('username')
         user_to_edit.email = request.POST.get('email')
         user_to_edit.save()
+
         messages.success(request, "Profil mis à jour.")
+
         return redirect('user-list')
-    return render(request, 'users/edit_user.html', {'user_to_edit': user_to_edit})
+
+    return render(request, 'users/edit_user.html', {
+        'user_to_edit': user_to_edit
+    })
 
 
 
-from .forms import RegisterForm # Importe formulaire existant
 
 def admin_add_user(request):
     if request.method == 'POST':
-        # utilisen ton RegisterForm qui connaît déjà le modèle User
-        form = RegisterForm(request.POST) 
+        form = RegisterForm(request.POST)
+
         if form.is_valid():
             form.save()
             return redirect('user-list')
+
     else:
         form = RegisterForm()
-    
-    return render(request, 'users/admin_add_user.html', {'form': form})
+
+    return render(request, 'users/admin_add_user.html', {
+        'form': form
+    })

@@ -122,9 +122,12 @@ document.addEventListener('DOMContentLoaded', function() {
     {% endif %}
 
     <!-- Reviews list -->
+    <!-- CHANGE 1: wrap each review with anchor id for notification links -->
     <div class="reviews-list" id="reviews-list">
       {% for review in reviews %}
-      {% include "movies/_review_card.html" with review=review depth=0 %}
+      <div id="review-{{ review.pk }}">
+        {% include "movies/_review_card.html" with review=review depth=0 %}
+      </div>
       {% empty %}
       <p class="no-reviews" id="no-reviews-msg">No reviews yet. Be the first!</p>
       {% endfor %}
@@ -1256,31 +1259,47 @@ if (wBtn) {
     });
 }
   /* ══════════════════════════ INIT EXISTING CARDS ════════════════════ */
+  /* CHANGE 2: _bound flag prevents double-binding on nested reply cards */
   function initCard(card) {
-    // Like buttons
     card.querySelectorAll('.like-btn').forEach(btn => {
+      if (btn._bound) return; btn._bound = true;
       btn.addEventListener('click', () => toggleLike(btn));
     });
-    // Reply toggle
     card.querySelectorAll('.reply-toggle-btn').forEach(btn => {
+      if (btn._bound) return; btn._bound = true;
       btn.addEventListener('click', () => {
         const id = btn.dataset.id;
         const form = document.getElementById(`reply-form-${id}`);
         if (form) form.classList.toggle('open');
       });
     });
-    // Report
     card.querySelectorAll('.report-btn').forEach(btn => {
+      if (btn._bound) return; btn._bound = true;
       btn.addEventListener('click', () => openReportModal(btn.dataset.id));
     });
-    // Delete
     card.querySelectorAll('.delete-btn').forEach(btn => {
+      if (btn._bound) return; btn._bound = true;
       btn.addEventListener('click', () => deleteItem(btn));
     });
   }
 
+  /* CHANGE 3: anchor scroll for notification links */
   document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.review-card').forEach(initCard);
+
+    const hash = window.location.hash;
+    if (hash) {
+      const target = document.querySelector(hash);
+      if (target) {
+        setTimeout(() => {
+          target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          const card = target.querySelector('.review-card') || target;
+          card.style.transition = 'box-shadow .3s';
+          card.style.boxShadow = '0 0 0 3px rgba(124,58,237,.4)';
+          setTimeout(() => card.style.boxShadow = '', 2000);
+        }, 300);
+      }
+    }
   });
 
   /* ══════════════════════════ DELETE ══════════════════════════════════ */

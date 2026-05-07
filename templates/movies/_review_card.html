@@ -3,7 +3,7 @@
 {# For top-level: depth=0. Django doesn't do true recursion in templates,  #}
 {# so replies are rendered via a with block that re-includes this partial.  #}
 
-<div class="review-card" data-id="{{ review.pk }}">
+<div class="review-card" id="review-{{ review.pk }}" data-id="{{ review.pk }}">
   <div class="review-header">
     <div class="review-avatar">{{ review.user.username|slice:":1"|upper }}</div>
     <div>

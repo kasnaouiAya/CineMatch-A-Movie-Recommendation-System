@@ -1,19 +1,27 @@
 {% extends 'base.html' %}
 {% block content %}
+{% include '_icons.html' %}
+
 <div style="padding: 60px 40px; text-align: center;">
-  <div style="font-size: 48px; margin-bottom: 16px;">👑</div>
+  <div style="display:inline-flex;align-items:center;justify-content:center;width:72px;height:72px;border:1.5px solid rgba(245,158,11,0.4);border-radius:50%;margin-bottom:20px;color:#f59e0b;">
+    <svg class="icon" style="width:36px;height:36px" aria-hidden="true"><use href="#ic-crown"/></svg>
+  </div>
+
   <h1 style="font-size: 36px; font-weight: 700; color: #f59e0b; margin-bottom: 12px;">
     Most Popular Movies
   </h1>
   <p style="font-size: 16px; color: #9ca3af; margin-bottom: 28px;">
     Discover the highest-rated films loved by our community
   </p>
+
   {% if not user.is_authenticated %}
     <a href="{% url 'login' %}" style="display:inline-flex; align-items:center; gap:10px; background:rgba(230,168,23,.15); border:1.5px solid #f59e0b; border-radius:99px; padding:13px 32px; font-size:15px; font-weight:500; color:#f59e0b; text-decoration:none;">
-      ☆ Sign in to unlock personalized recommendations
+      <svg class="icon" aria-hidden="true"><use href="#ic-star-o"/></svg>
+      Sign in to unlock personalized recommendations
     </a>
   {% else %}
     <p style="color: #9ca3af;">Welcome back, <strong style="color:white">{{ user.username }}</strong>!</p>
   {% endif %}
 </div>
+
 {% endblock %}

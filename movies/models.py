@@ -1,4 +1,5 @@
 from django.db import models
+from pgvector.django import VectorField
 from django.conf import settings
 
 from users.models import User
@@ -30,9 +31,9 @@ class Movie(models.Model):
     poster_path = models.CharField(max_length=255, blank=True, null=True)
     average_rating = models.FloatField(default=0.0)
     created_at = models.DateTimeField(auto_now_add=True)
-    description_vector = models.JSONField(null=True, blank=True)
+    description_vector = VectorField(dimensions=384, null=True, blank=True)
     tmdb_rating = models.FloatField(default=0.0)
-
+    
     def __str__(self):
         return f'{self.title} ({self.release_year})'
 
