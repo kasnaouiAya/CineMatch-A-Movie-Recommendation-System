@@ -11,4 +11,11 @@ urlpatterns = [
     path('review/<int:review_id>/delete/',      views.delete_review, name='delete_review'),
     path('reply/<int:reply_id>/delete/',        views.delete_reply,  name='delete_reply'),
     path('ai-search/',                          views.ai_movie_search, name='ai_movie_search'),
+    path('<int:pk>/watchlist/',                 views.toggle_watchlist, name='toggle_watchlist'),
+    path('<int:pk>/watched/',                   views.toggle_watched,   name='toggle_watched'),
+    path('watchlist/',                          views.watchlist_view,   name='watchlist'),
+    path('watched/',                            views.watched_view,     name='watched'),  # ← ADD THIS
+    path('admin/dashboard/', views.admin_dashboard, name='admin_dashboard'),    
+
+    
 ]

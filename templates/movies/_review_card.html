@@ -43,10 +43,10 @@
       {% if review.pk in reported_ids %}
         <button class="action-btn reported" disabled>✅ Reported</button>
       {% else %}
-        <button class="action-btn report-btn" data-id="{{ review.pk }}">🚩 Report</button>
+        <button class="action-btn report-btn" onclick="confirmReport({{ review.pk }})" data-id="{{ review.pk }}">🚩 Report</button>
       {% endif %}
       {% if review.user == user or user.is_superuser %}
-        <button class="action-btn delete-btn" data-id="{{ review.pk }}" data-type="review">🗑️ Delete</button>
+        <button class="action-btn delete-btn" data-id="{{ review.pk }}" data-type="review"> <i class="fas fa-trash"></i>  Delete</button>
       {% endif %}
     {% else %}
       <span class="action-btn" style="cursor:default;">🤍 {{ review.like_count }}</span>
@@ -82,3 +82,4 @@
     <div class="reply-children" id="children-{{ review.pk }}"></div>
   {% endif %}
 </div>
+

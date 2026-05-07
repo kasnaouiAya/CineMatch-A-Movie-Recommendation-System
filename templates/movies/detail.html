@@ -34,6 +34,29 @@
         <span class="rating-text">Average Rating</span>
       </div>
 
+<!-- WATCHLIST BUTTONS -->
+{% if user.is_authenticated %}
+<div class="watchlist-actions" style="margin-top: 16px; display: flex; gap: 12px; flex-wrap: wrap;">
+    <button id="watchlist-btn" class="btn-watchlist {% if in_watchlist %}in-list{% endif %}" 
+            data-url="{% url 'toggle_watchlist' movie.id %}" 
+            data-csrf="{{ csrf_token }}"
+            style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--bg3); color: var(--text2); font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.2s;">
+        <span class="wl-icon">{% if in_watchlist %}✓{% else %}+{% endif %}</span>
+        <span class="wl-label">{% if in_watchlist %}Dans la Watchlist{% else %} Watchlist{% endif %}</span>
+    </button>
+    
+    <button id="watched-btn" class="btn-watched {% if watched %}watched{% endif %} {% if not in_watchlist %}hidden{% endif %}" 
+            data-url="{% url 'toggle_watched' movie.id %}" 
+            data-csrf="{{ csrf_token }}"
+            style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; border-radius: 8px; border: 1.5px solid var(--border); background: var(--bg3); color: var(--text2); font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.2s;">
+        <span class="w-icon">{% if watched %}👁️{% else %}👁️‍🗨️{% endif %}</span>
+        <span class="w-label">{% if watched %}Regardé{% else %}Marquer comme regardé{% endif %}</span>
+    </button>
+</div>
+{% endif %}
+
+
+
       <!-- ★ STAR RATING -->
       {% if user.is_authenticated %}
       <form method="POST" action="{% url 'movie_detail' movie.pk %}" class="star-form" id="rating-form">
@@ -47,9 +70,14 @@
         </div>
         <button type="submit" class="btn-rate" id="rate-btn" disabled>Rate</button>
       </form>
-      {% if user_score %}
-      <script>document.addEventListener('DOMContentLoaded', () => preSelectStars({{ user_score }}));</script>
-      {% endif %}
+{% if user_score %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var score = {{ user_score }};
+    preSelectStars(score);
+});
+</script>
+{% endif %}
       {% endif %}
 
       {% if movie.trailer_url %}
@@ -932,6 +960,55 @@
       bottom: 16px;
     }
   }
+
+/* WATCHLIST BUTTONS */
+.btn-watchlist {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: 1.5px solid var(--border);
+    background: var(--bg3);
+    color: var(--text2);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s;
+}
+
+.btn-watchlist.in-list {
+    background: rgba(16, 185, 129, 0.15);
+    border-color: #10b981;
+    color: #10b981;
+}
+
+.btn-watched {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border-radius: 8px;
+    border: 1.5px solid var(--border);
+    background: var(--bg3);
+    color: var(--text2);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.2s;
+}
+
+.btn-watched.watched {
+    background: rgba(245, 158, 11, 0.15);
+    border-color: var(--gold);
+    color: var(--gold);
+}
+
+.hidden {
+    display: none !important;
+}
 </style>
 
 <script>
@@ -1106,6 +1183,81 @@
     return div;
   }
 
+/* ── WATCHLIST TOGGLE ── */
+const wlBtn = document.getElementById('watchlist-btn');
+if (wlBtn) {
+    wlBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        const url  = wlBtn.dataset.url;
+        const csrf = wlBtn.dataset.csrf;
+        try {
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrf,
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `csrfmiddlewaretoken=${csrf}`,
+            });
+            const data = await res.json();
+            const label = wlBtn.querySelector('.wl-label');
+            const icon = wlBtn.querySelector('.wl-icon');
+            if (data.in_watchlist) {
+                wlBtn.classList.add('in-list');
+                icon.textContent = '✓';
+                label.textContent = 'Dans la Watchlist';
+                const wBtn = document.getElementById('watched-btn');
+                if (wBtn) wBtn.classList.remove('hidden');
+            } else {
+                wlBtn.classList.remove('in-list');
+                icon.textContent = '+';
+                label.textContent = '+ Watchlist';
+                const wBtn = document.getElementById('watched-btn');
+                if (wBtn) wBtn.classList.add('hidden');
+            }
+            showToast(data.message, false);
+        } catch (err) {
+            showToast('Une erreur est survenue.', true);
+        }
+    });
+}
+
+/* ── WATCHED TOGGLE ── */
+const wBtn = document.getElementById('watched-btn');
+if (wBtn) {
+    wBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        const url  = wBtn.dataset.url;
+        const csrf = wBtn.dataset.csrf;
+        try {
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrf,
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `csrfmiddlewaretoken=${csrf}`,
+            });
+            const data = await res.json();
+            const label = wBtn.querySelector('.w-label');
+            const icon = wBtn.querySelector('.w-icon');
+            if (data.watched) {
+                wBtn.classList.add('watched');
+                icon.textContent = '👁️';
+                label.textContent = 'Regardé';
+            } else {
+                wBtn.classList.remove('watched');
+                icon.textContent = '👁️‍🗨️';
+                label.textContent = 'Marquer comme regardé';
+            }
+            showToast(data.message, false);
+        } catch (err) {
+            showToast('Une erreur est survenue.', true);
+        }
+    });
+}
   /* ══════════════════════════ INIT EXISTING CARDS ════════════════════ */
   /* CHANGE 2: _bound flag prevents double-binding on nested reply cards */
   function initCard(card) {

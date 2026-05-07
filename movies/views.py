@@ -5,12 +5,23 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.urls import reverse
 from .models import Movie, Genre
-from reviews.models import Rating, Review, Reply, ReviewLike, ReviewReport, Watchlist
+from reviews.models import Rating, Review, Reply, ReviewLike, ReviewReport
+from movies.models import Watchlist, Watched
+from .models import Movie, Genre, Watched, Watchlist
+from reviews.models import Rating, Review, Reply, ReviewLike, ReviewReport
 from reviews.forms import ReviewForm
 from reviews import models as review_models
 from pgvector.django import CosineDistance
 from users.models import Notification
 import requests
+from django.contrib import messages
+from django.db.models import Count
+from django.utils import timezone
+from datetime import timedelta
+from .models import User
+from reviews.models import UserReport
+from movies.models import Movie
+
 
 # LOCAL AI IMPORT
 from sentence_transformers import SentenceTransformer
@@ -87,15 +98,15 @@ def trending(request):
         pass
 
     movies = (
-        Movie.objects
-        .prefetch_related('genres')
-        .annotate(
-            rating_count=Count('ratings', distinct=True),
-            review_count=Count('reviews', distinct=True),
-            watchlist_count=Count('watchlisted_by', distinct=True),
-            avg_score=Avg('ratings__score'),
-        )
+    Movie.objects
+    .prefetch_related('genres')
+    .annotate(
+        rating_count=Count('ratings', distinct=True),
+        review_count=Count('reviews', distinct=True),
+        watchlist_count=Count('in_watchlist', distinct=True),  # ← fix here
+        avg_score=Avg('ratings__score'),
     )
+)
 
     scored = []
     for movie in movies:
@@ -206,8 +217,21 @@ def movie_detail(request, pk):
     user_rating_count = Rating.objects.filter(movie=movie).count()
     tmdb_rating_display = round((movie.tmdb_rating / 10) * 5, 1) if movie.tmdb_rating else None
 
+    
+        # Watchlist & Watched status
+    in_watchlist = False
+    watched = False
+    if request.user.is_authenticated:
+        in_watchlist = Watchlist.objects.filter(
+            user=request.user, movie=movie
+        ).exists()
+        
+        watched = Watched.objects.filter(
+            user=request.user, movie=movie
+        ).exists()
+
     return render(request, 'movies/detail.html', {
-        'movie':               movie,
+'movie':               movie,
         'reviews':             reviews,
         'average':             average,
         'review_form':         ReviewForm(),
@@ -216,6 +240,8 @@ def movie_detail(request, pk):
         'reported_ids':        reported_ids,
         'user_rating_count':   user_rating_count,
         'tmdb_rating_display': tmdb_rating_display,
+        'in_watchlist':        in_watchlist,
+        'watched':             watched,
     })
 
 
@@ -345,14 +371,14 @@ def ai_movie_search(request):
     if query:
         try:
             query_vector = local_ai.encode(query).tolist()
-            results = Movie.objects.annotate(
+            results = list(Movie.objects.annotate(
                 distance=CosineDistance('description_vector', query_vector)
-            ).order_by('distance')[:12]
+            ).order_by('distance')[:12])
         except Exception as e:
             print(f"Local AI Search Error: {e}")
-            results = Movie.objects.filter(
+            results = list(Movie.objects.filter(
                 Q(title__icontains=query) | Q(description__icontains=query)
-            )[:12]
+            )[:12])
 
     for movie in results:
         movie.display_rating = _blended_rating(movie)
@@ -364,3 +390,105 @@ def ai_movie_search(request):
         'query': query,
         'is_ai': True,
     })
+# ── WATCHLIST TOGGLE ─────────────────────────────────────────────────────────
+@login_required
+def toggle_watchlist(request, pk):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+    movie = get_object_or_404(Movie, pk=pk)
+    entry = Watchlist.objects.filter(user=request.user, movie=movie).first()
+    
+    if entry:
+        entry.delete()
+        in_watchlist = False
+        message = 'Retiré de votre watchlist'
+    else:
+        Watchlist.objects.create(user=request.user, movie=movie)
+        in_watchlist = True
+        message = 'Ajouté à votre watchlist !'
+    
+    return JsonResponse({
+        'status': 'ok',
+        'in_watchlist': in_watchlist,
+        'message': message,
+    })
+
+# ── WATCHED TOGGLE ───────────────────────────────────────────────────────────
+@login_required
+def toggle_watched(request, pk):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+    
+    movie = get_object_or_404(Movie, pk=pk)
+    
+    # ✅ Automatically remove from Watchlist when marking as watched
+    Watchlist.objects.filter(user=request.user, movie=movie).delete()
+    
+    # Toggle Watched status
+    if Watched.objects.filter(user=request.user, movie=movie).exists():
+        Watched.objects.filter(user=request.user, movie=movie).delete()
+        is_watched = False
+        message = 'Retiré des films regardés'
+    else:
+        Watched.objects.create(user=request.user, movie=movie)
+        is_watched = True
+        message = 'Ajouté aux films regardés !'
+    
+    return JsonResponse({
+        'status': 'ok',
+        'watched': is_watched,
+        'in_watchlist': False,   # Important: now it's no longer in watchlist
+        'message': message,
+    })
+
+# ── WATCHLIST VIEW ───────────────────────────────────────────────────────────
+@login_required
+def watchlist_view(request):
+    items = Watchlist.objects.filter(user=request.user).select_related('movie').order_by('-added_at')
+    return render(request, 'movies/watchlist.html', {'items': items})
+
+
+# ── WATCHED VIEW ─────────────────────────────────────────────────────────────
+@login_required
+def watched_view(request):
+    """Page Watched - affiche les films déjà regardés"""
+    items = Watched.objects.filter(
+        user=request.user
+    ).select_related('movie').order_by('-watched_at')
+    
+    return render(request, 'movies/watched.html', {'items': items})
+
+
+
+# ── ADMIN DASHBOARD ─────────────────────────────────────────────────────────
+@login_required
+def admin_dashboard(request):
+    if not request.user.is_superuser:
+        messages.error(request, "Accès réservé aux administrateurs uniquement.")
+        return redirect('home')
+
+    # Statistiques
+    total_movies = Movie.objects.count()
+    total_users = User.objects.count()
+    total_reviews = Review.objects.count()
+    
+    # Récupération des signalements depuis reviews.models
+    # On ajoute select_related pour que le dashboard ne rame pas
+    reports = UserReport.objects.select_related('review', 'review__user', 'reporter').order_by('-created_at')
+
+    # Données récentes
+    recent_movies = Movie.objects.order_by('-created_at')[:6]
+    recent_reviews = Review.objects.select_related('user', 'movie').order_by('-created_at')[:6]
+
+    context = {
+        'total_movies': total_movies,
+        'total_users': total_users,
+        'total_reviews': total_reviews,
+        'reports': reports, # On ajoute les rapports au contexte
+        'recent_movies': recent_movies,
+        'recent_reviews': recent_reviews,
+    }
+    return render(request, 'admin/dashboard.html', context)
+
+
+

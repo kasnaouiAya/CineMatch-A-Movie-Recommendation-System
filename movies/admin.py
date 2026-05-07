@@ -1,5 +1,4 @@
 from django.contrib import admin
-
 # This file is used to register  models with the Django admin site.
 from .models import Movie, Genre
 
