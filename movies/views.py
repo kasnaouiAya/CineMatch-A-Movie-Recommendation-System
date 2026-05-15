@@ -21,7 +21,7 @@ from datetime import timedelta
 from .models import User
 from reviews.models import UserReport
 from movies.models import Movie
-
+from django.core.paginator import Paginator
 
 # LOCAL AI IMPORT
 from sentence_transformers import SentenceTransformer
@@ -68,14 +68,20 @@ def movie_list(request):
     if content_type:
         movies = movies.filter(content_type=content_type)
 
-    for movie in movies:
+    # Paginate — 20 movies per page
+    paginator = Paginator(movies, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    for movie in page_obj:
         movie.display_rating = _blended_rating(movie)
 
     genres = Genre.objects.all()
     return render(request, 'movies/list.html', {
-        'movies': movies,
+        'movies': page_obj,
         'genres': genres,
         'query': query,
+        'page_obj': page_obj,
     })
 
 
@@ -364,32 +370,7 @@ def delete_reply(request, reply_id):
     return JsonResponse({'status': 'ok'})
 
 
-def ai_movie_search(request):
-    query = request.GET.get('q', '').strip()
-    results = []
 
-    if query:
-        try:
-            query_vector = local_ai.encode(query).tolist()
-            results = list(Movie.objects.annotate(
-                distance=CosineDistance('description_vector', query_vector)
-            ).order_by('distance')[:12])
-        except Exception as e:
-            print(f"Local AI Search Error: {e}")
-            results = list(Movie.objects.filter(
-                Q(title__icontains=query) | Q(description__icontains=query)
-            )[:12])
-
-    for movie in results:
-        movie.display_rating = _blended_rating(movie)
-
-    genres = Genre.objects.all()
-    return render(request, 'movies/list.html', {
-        'movies': results,
-        'genres': genres,
-        'query': query,
-        'is_ai': True,
-    })
 # ── WATCHLIST TOGGLE ─────────────────────────────────────────────────────────
 @login_required
 def toggle_watchlist(request, pk):
@@ -492,3 +473,40 @@ def admin_dashboard(request):
 
 
 
+
+
+
+
+
+
+def ai_movie_search(request):
+    query = request.GET.get('q', '').strip()
+    results = []
+
+    if query:
+        if local_ai is not None:
+            try:
+                query_vector = local_ai.encode(query).tolist()
+                results = list(Movie.objects.annotate(
+                    distance=CosineDistance('description_vector', query_vector)
+                ).order_by('distance')[:12])
+                print(f"✅ Vector search returned {len(results)} results")
+            except Exception as e:
+                print(f"❌ Vector search error: {e}")
+
+        if not results:
+            print("⚠️ Falling back to text search")
+            results = list(Movie.objects.filter(
+                Q(title__icontains=query) | Q(description__icontains=query)
+            )[:12])
+
+    for movie in results:
+        movie.display_rating = _blended_rating(movie)
+
+    genres = Genre.objects.all()
+    return render(request, 'movies/list.html', {
+        'movies': results,
+        'genres': genres,
+        'query': query,
+        'is_ai': True,
+    })

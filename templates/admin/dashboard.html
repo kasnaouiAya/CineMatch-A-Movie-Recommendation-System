@@ -237,7 +237,7 @@
         <div class="header-row">
             <div>
                 <h1 class="text-3xl font-black text-[#1A162E] dark:text-white tracking-tight">CineMatch Admin</h1>
-                <p class="text-[#716E8E] font-medium text-sm mt-1">Contrôle et surveillance de la plateforme</p>
+                <p class="text-[#716E8E] font-medium text-sm mt-1">Platform control and monitoring</p>
             </div>
             <a href="{% url 'admin:index' %}" class="btn-primary">
                 <i class="fa-solid fa-gears"></i> Django Admin
@@ -257,7 +257,7 @@
             <a href="{% url 'user-list' %}" class="stat-card clickable">
                 <div class="icon-circle"><i class="fa-solid fa-users"></i></div>
                 <div>
-                    <p class="stat-label">Utilisateurs</p>
+                    <p class="stat-label">Users</p>
                     <h2 class="stat-value">{{ total_users }}</h2>
                 </div>
                 <i class="fa-solid fa-arrow-up-right-from-square card-arrow"></i>
@@ -266,7 +266,7 @@
             <div class="stat-card">
                 <div class="icon-circle"><i class="fa-solid fa-star"></i></div>
                 <div>
-                    <p class="stat-label">Avis</p>
+                    <p class="stat-label">Reviews</p>
                     <h2 class="stat-value">{{ total_reviews }}</h2>
                 </div>
             </div>
@@ -274,7 +274,7 @@
             <div class="stat-card">
                 <div class="icon-circle"><i class="fa-solid fa-eye"></i></div>
                 <div>
-                    <p class="stat-label">Vues</p>
+                    <p class="stat-label">Views</p>
                     <h2 class="stat-value">{{ total_watched }}</h2>
                 </div>
             </div>
@@ -286,7 +286,7 @@
             <div class="flex flex-col gap-6">
                 <div class="panel">
                     <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-xl font-bold text-[#1A162E] dark:text-white">Statistiques de Fréquentation</h2>
+                        <h2 class="text-xl font-bold text-[#1A162E] dark:text-white">Attendance Statistics</h2>
                         <span class="text-xs font-bold text-[#7B57FF] bg-purple-50 dark:bg-purple-900/20 px-3 py-1 rounded-full uppercase">Données Live</span>
                     </div>
                     <div class="h-[350px] w-full">
@@ -298,10 +298,10 @@
                     <div class="table-header-main">
                         <div class="flex items-center gap-3">
                             <i class="fa-solid fa-triangle-exclamation"></i>
-                            <span class="font-bold">Signalements de la Communauté</span>
+                            <span class="font-bold">Community Reports</span>
                         </div>
                         <div class="text-xs opacity-90 uppercase font-bold tracking-widest">
-                            {{ reports.count }} alertes en attente
+                            {{ reports.count }} pending alerts
                         </div>
                     </div>
 
@@ -309,10 +309,10 @@
                         <table class="flat-table">
                             <thead>
                                 <tr>
-                                    <th>Auteur</th>
-                                    <th>Contenu</th>
-                                    <th>Raison</th>
-                                    <th>Signalé par</th>
+                                    <th>Writer</th>
+                                    <th>Content</th>
+                                    <th>Reason</th>
+                                    <th>Reported by</th>
                                     <th class="text-center">Actions</th>
                                 </tr>
                             </thead>
@@ -342,7 +342,7 @@
                                 <tr>
                                     <td colspan="5" class="text-center py-12 opacity-50">
                                         <i class="fa-solid fa-circle-check text-3xl text-green-500 mb-2"></i>
-                                        <p>Tout est en ordre. Aucun signalement trouvé.</p>
+                                        <p>Everything is in order. No reports found.</p>
                                     </td>
                                 </tr>
                                 {% endfor %}
@@ -355,7 +355,7 @@
             <div class="panel border-l-4 border-l-[#7B57FF] flex flex-col self-stretch">
                 <div class="flex items-center gap-2 mb-6">
                     <i class="fa-solid fa-bolt text-yellow-500"></i>
-                    <h2 class="text-xl font-bold text-[#1A162E] dark:text-white">Activités Récentes</h2>
+                    <h2 class="text-xl font-bold text-[#1A162E] dark:text-white">Recent activities</h2>
                 </div>
                 <div class="flex-1 overflow-y-auto max-h-[850px] pr-2 custom-scrollbar">
                     {% for review in recent_reviews %}
@@ -364,7 +364,7 @@
                             <div class="report-avatar">{{ review.user.username|slice:":1"|upper }}</div>
                             <div>
                                 <p class="font-bold text-sm text-[#1A162E] dark:text-white">{{ review.user.username }}</p>
-                                <p class="text-xs text-gray-400">A noté <b>{{ review.movie.title }}</b></p>
+                                <p class="text-xs text-gray-400">Reviewed <b>{{ review.movie.title }}</b></p>
                             </div>
                         </div>
                     </div>

@@ -19,6 +19,9 @@
         </div>
       {% endfor %}
       <button type="submit" class="btn-red">Sign In</button>
+      <div style="text-align:right; margin-top:8px;">
+        <a href="{% url 'password_reset' %}" style="color:#9ca3af; font-size:13px;">Forgot password?</a>
+      </div>
     </form>
     <div style="text-align:center; margin-top:20px; font-size:14px; color:#9ca3af;">
       No account? <a href="{% url 'register' %}" style="color:#f59e0b; font-weight:500;">Create one</a>

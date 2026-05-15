@@ -88,8 +88,12 @@ print(f"DEBUG: Looking for templates in {BASE_DIR / 'templates'}")
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'pfa_movie_db',
+        'USER': 'postgres',
+        'PASSWORD': 'riham',
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
 
@@ -151,3 +155,16 @@ AUTH_USER_MODEL = 'users.User'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 LOGIN_URL = '/users/login/'
+
+
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'        # or smtp.sendgrid.net, etc.
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'your@email.com'
+EMAIL_HOST_PASSWORD = 'your-app-password'  # use an App Password for Gmail
+DEFAULT_FROM_EMAIL = 'your@email.com'
+
+
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

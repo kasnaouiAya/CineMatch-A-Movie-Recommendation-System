@@ -2,7 +2,6 @@
 {% block content %}
 
 <style>
-  /* Mêmes styles que watchlist.html */
   .wl-wrap { padding: 40px; max-width: 1200px; margin: 0 auto; }
 
   .wl-header {
@@ -120,7 +119,7 @@
       <div class="wl-header-icon">👁️</div>
       <div>
         <h1>Watched</h1>
-        <p>Films que vous avez regardés</p>
+        <p>Movies you've watched</p>
       </div>
     </div>
     {% if items %}
@@ -162,19 +161,23 @@
             </div>
           {% endif %}
           <div class="wl-card-rating">
-            <span class="star">★</span>
-            <span class="val">{{ item.movie.average_rating|floatformat:1 }}</span>
+            {% if item.movie.tmdb_rating %}
+              <span class="star">★</span>
+              <span class="val">{{ item.movie.tmdb_rating|floatformat:1 }}</span>
+            {% else %}
+              <span class="val" style="color: var(--text3);">N/A</span>
+            {% endif %}
           </div>
-          <div class="wl-added-date">Regardé le {{ item.watched_at|date:"d M Y" }}</div>
+          <div class="wl-added-date">Watched on {{ item.watched_at|date:"d M Y" }}</div>
         </div>
       </div>
 
     {% empty %}
       <div class="wl-empty">
         <div class="wl-empty-icon">👁️</div>
-        <p>Vous n'avez pas encore marqué de films comme regardés.<br>Ajoutez des films à votre watchlist et marquez-les comme regardés !</p>
+        <p>You have not yet marked any films as watched.<br>Add movies to your watchlist and mark them as watched!</p>
         <a href="{% url 'movie_list' %}" class="wl-browse-btn">
-          <i class="fa-solid fa-film"></i> Parcourir les films
+          <i class="fa-solid fa-film"></i> See films
         </a>
       </div>
     {% endfor %}

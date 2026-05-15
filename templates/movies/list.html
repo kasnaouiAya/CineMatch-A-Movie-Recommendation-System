@@ -148,6 +148,28 @@
       </div>
     {% endfor %}
   </div>
+
+  <!-- Pagination -->
+  {% if page_obj.paginator.num_pages > 1 %}
+  <div class="pagination">
+    {% if page_obj.has_previous %}
+      <a href="?page={{ page_obj.previous_page_number }}&q={{ query }}&genre={{ request.GET.genre }}&type={{ request.GET.type }}" class="page-btn">← Prev</a>
+    {% endif %}
+
+    {% for num in page_obj.paginator.page_range %}
+      {% if page_obj.number == num %}
+        <span class="page-btn active">{{ num }}</span>
+      {% elif num > page_obj.number|add:"-3" and num < page_obj.number|add:"3" %}
+        <a href="?page={{ num }}&q={{ query }}&genre={{ request.GET.genre }}&type={{ request.GET.type }}" class="page-btn">{{ num }}</a>
+      {% endif %}
+    {% endfor %}
+
+    {% if page_obj.has_next %}
+      <a href="?page={{ page_obj.next_page_number }}&q={{ query }}&genre={{ request.GET.genre }}&type={{ request.GET.type }}" class="page-btn">Next →</a>
+    {% endif %}
+  </div>
+  {% endif %}
+
 </div>
 
 <style>
@@ -455,6 +477,31 @@
   .no-movies-text  { color: var(--text2); font-size: 18px; margin-bottom: 24px; }
   .reset-link      { color: var(--red); text-decoration: none; font-weight: 600; }
   .reset-link:hover { text-decoration: underline; }
+
+  /* ── Pagination ── */
+  .pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-top: 40px;
+    flex-wrap: wrap;
+  }
+
+  .page-btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--text2);
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.15s;
+  }
+
+  .page-btn:hover { border-color: var(--red); color: var(--red); }
+  .page-btn.active { background: var(--red); color: white; border-color: var(--red); }
 
   /* ── Responsive ── */
   @media (max-width: 1024px) {

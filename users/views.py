@@ -365,3 +365,11 @@ def admin_add_user(request):
     return render(request, 'users/admin_add_user.html', {
         'form': form
     })
+
+
+
+
+
+
+
+

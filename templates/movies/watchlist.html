@@ -119,7 +119,7 @@
       <div class="wl-header-icon">🕐</div>
       <div>
         <h1>Watchlist</h1>
-        <p>Films à regarder plus tard</p>
+        <p>Movies to watch later</p>
       </div>
     </div>
     {% if items %}
@@ -161,19 +161,23 @@
             </div>
           {% endif %}
           <div class="wl-card-rating">
-            <span class="star">★</span>
-            <span class="val">{{ item.movie.average_rating|floatformat:1 }}</span>
+            {% if item.movie.tmdb_rating %}
+              <span class="star">★</span>
+              <span class="val">{{ item.movie.tmdb_rating|floatformat:1 }}</span>
+            {% else %}
+              <span class="val" style="color: var(--text3);">N/A</span>
+            {% endif %}
           </div>
-          <div class="wl-added-date">Ajouté le {{ item.added_at|date:"d M Y" }}</div>
+          <div class="wl-added-date">Added on {{ item.added_at|date:"d M Y" }}</div>
         </div>
       </div>
 
     {% empty %}
       <div class="wl-empty">
         <div class="wl-empty-icon">🎬</div>
-        <p>Votre watchlist est vide.<br>Ajoutez des films depuis leur page de détail !</p>
+        <p>Your watchlist is empty<br>Add movies from their details page!</p>
         <a href="{% url 'movie_list' %}" class="wl-browse-btn">
-          <i class="fa-solid fa-film"></i> Parcourir les films
+          <i class="fa-solid fa-film"></i> See movies
         </a>
       </div>
     {% endfor %}
